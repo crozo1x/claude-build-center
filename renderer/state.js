@@ -18,6 +18,9 @@ window.BuildCenter = (function () {
     onSessionsChanged(cb) {
       listeners.sessionsChanged.push(cb);
     },
+    offSessionsChanged(cb) {
+      listeners.sessionsChanged = listeners.sessionsChanged.filter((l) => l !== cb);
+    },
     getProjectFolder() {
       return projectFolder;
     },
@@ -27,6 +30,9 @@ window.BuildCenter = (function () {
     },
     onProjectFolderChanged(cb) {
       listeners.projectFolderChanged.push(cb);
+    },
+    offProjectFolderChanged(cb) {
+      listeners.projectFolderChanged = listeners.projectFolderChanged.filter((l) => l !== cb);
     },
   };
 })();

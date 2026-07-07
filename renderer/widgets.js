@@ -1,5 +1,11 @@
 let grid;
 
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function renderActiveSessions(container) {
   function draw(sessions) {
     if (!sessions || sessions.length === 0) {
@@ -9,12 +15,18 @@ function renderActiveSessions(container) {
     container.innerHTML =
       '<ul class="session-list">' +
       sessions
-        .map((s) => `<li class="${s.exited ? 'exited' : ''}">${s.title} <span class="kind">${s.kind}</span></li>`)
+        .map(
+          (s) =>
+            `<li class="${s.exited ? 'exited' : ''}">${escapeHtml(s.title)} <span class="kind">${escapeHtml(
+              s.kind
+            )}</span></li>`
+        )
         .join('') +
       '</ul>';
   }
   draw(window.BuildCenter.getSessions());
   window.BuildCenter.onSessionsChanged(draw);
+  return () => window.BuildCenter.offSessionsChanged(draw);
 }
 
 function renderGitStatus(container) {
@@ -30,13 +42,17 @@ function renderGitStatus(container) {
       return;
     }
     container.innerHTML = `
-      <p class="git-branch">${status.branch}</p>
+      <p class="git-branch">${escapeHtml(status.branch)}</p>
       <p class="git-dirty">${status.dirty ? status.dirtyCount + ' uncommitted change(s)' : 'clean'}</p>
     `;
   }
   draw();
   window.BuildCenter.onProjectFolderChanged(draw);
-  setInterval(draw, 5000);
+  const intervalId = setInterval(draw, 5000);
+  return () => {
+    window.BuildCenter.offProjectFolderChanged(draw);
+    clearInterval(intervalId);
+  };
 }
 
 function renderRojoStatus(container) {
@@ -54,6 +70,10 @@ function renderRojoStatus(container) {
   draw();
   window.BuildCenter.onSessionsChanged(draw);
   window.BuildCenter.onProjectFolderChanged(draw);
+  return () => {
+    window.BuildCenter.offSessionsChanged(draw);
+    window.BuildCenter.offProjectFolderChanged(draw);
+  };
 }
 
 function renderRobloxAnalytics(container) {
@@ -89,8 +109,9 @@ function addWidgetToGrid(type, position) {
     content: contentHtml,
   });
   const bodyEl = el.querySelector('.widget-body');
-  catalogEntry.render(bodyEl);
+  const dispose = catalogEntry.render(bodyEl);
   el.querySelector('.widget-close').addEventListener('click', () => {
+    if (typeof dispose === 'function') dispose();
     grid.removeWidget(el);
     persistConfig();
   });

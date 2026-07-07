@@ -20,4 +20,13 @@ contextBridge.exposeInMainWorld('api', {
   roblox: {
     playTest: (folder) => ipcRenderer.invoke('roblox:playTest', folder),
   },
+  rojo: {
+    checkInstalled: () => ipcRenderer.invoke('rojo:checkInstalled'),
+    getStatus: (folder) => ipcRenderer.invoke('rojo:getStatus', folder),
+    onStatus: (cb) => {
+      const listener = (_event, payload) => cb(payload);
+      ipcRenderer.on('rojo:status', listener);
+      return () => ipcRenderer.removeListener('rojo:status', listener);
+    },
+  },
 });

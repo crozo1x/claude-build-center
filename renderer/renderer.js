@@ -3,9 +3,15 @@ const shellSelect = document.getElementById('shellSelect');
 const btnNewTerminal = document.getElementById('btnNewTerminal');
 const btnProjectFolder = document.getElementById('btnProjectFolder');
 const projectFolderLabel = document.getElementById('projectFolderLabel');
+const btnSyncStudio = document.getElementById('btnSyncStudio');
+const btnPlayTest = document.getElementById('btnPlayTest');
 
 function updateProjectFolderUI(folder) {
   projectFolderLabel.textContent = folder || 'No project set';
+  btnSyncStudio.disabled = !folder;
+  btnSyncStudio.title = folder ? '' : 'Set a project folder first';
+  btnPlayTest.disabled = !folder;
+  btnPlayTest.title = folder ? '' : 'Set a project folder first';
 }
 
 window.BuildCenter.onProjectFolderChanged(updateProjectFolderUI);
@@ -148,6 +154,19 @@ const btnNewScript = document.getElementById('btnNewScript');
 
 btnNewScript.addEventListener('click', () => {
   createPane({ title: 'New Script', autoRun: 'claude' });
+});
+
+btnSyncStudio.addEventListener('click', () => {
+  const folder = window.BuildCenter.getProjectFolder();
+  createPane({ title: 'Sync to Studio', kind: 'sync-to-studio', autoRun: 'rojo serve', cwd: folder });
+});
+
+btnPlayTest.addEventListener('click', async () => {
+  const folder = window.BuildCenter.getProjectFolder();
+  const result = await window.api.roblox.playTest(folder);
+  if (!result.ok) {
+    alert('Play/Test failed: ' + result.error);
+  }
 });
 
 // Start with one plain terminal open so the app isn't empty on launch.

@@ -1,10 +1,12 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog, shell } = require('electron');
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
 const pty = require('node-pty');
 const { execFile } = require('child_process');
 const { loadConfig, saveConfig } = require('./lib/config-store');
 const { parseGitStatus } = require('./lib/git-status');
+const { findPlaceFile } = require('./lib/find-place-file');
 
 const terminals = new Map(); // id -> pty process
 let mainWindow;
@@ -148,4 +150,19 @@ ipcMain.handle('git:status', (event, folder) => {
       });
     });
   });
+});
+
+ipcMain.handle('roblox:playTest', (event, folder) => {
+  let files;
+  try {
+    files = fs.readdirSync(folder);
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+  const placeFile = findPlaceFile(files);
+  if (!placeFile) {
+    return { ok: false, error: 'No .rbxl or .rbxlx file found in project folder' };
+  }
+  shell.openPath(path.join(folder, placeFile));
+  return { ok: true };
 });

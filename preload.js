@@ -17,4 +17,7 @@ contextBridge.exposeInMainWorld('api', {
   git: {
     status: (folder) => ipcRenderer.invoke('git:status', folder),
   },
+  roblox: {
+    playTest: (folder) => ipcRenderer.invoke('roblox:playTest', folder),
+  },
 });

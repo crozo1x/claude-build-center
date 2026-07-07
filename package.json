@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "rebuild": "electron-rebuild -f -w node-pty"
+    "rebuild": "electron-rebuild -f -w node-pty",
+    "test": "node --test"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",

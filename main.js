@@ -1,10 +1,16 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog, shell } = require('electron');
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
 const pty = require('node-pty');
+const { execFile } = require('child_process');
+const { loadConfig, saveConfig } = require('./lib/config-store');
+const { parseGitStatus } = require('./lib/git-status');
+const { findPlaceFile } = require('./lib/find-place-file');
 
 const terminals = new Map(); // id -> pty process
 let mainWindow;
+const configPath = path.join(app.getPath('userData'), 'config.json');
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -27,7 +33,10 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   for (const term of terminals.values()) {
@@ -108,4 +117,52 @@ ipcMain.on('pty:kill', (event, { id }) => {
     }
     terminals.delete(id);
   }
+});
+
+ipcMain.handle('config:load', () => {
+  return loadConfig(configPath);
+});
+
+ipcMain.handle('config:save', (event, config) => {
+  saveConfig(configPath, config);
+  return { ok: true };
+});
+
+ipcMain.handle('project:selectFolder', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return { canceled: true };
+  }
+  return { canceled: false, folder: result.filePaths[0] };
+});
+
+ipcMain.handle('git:status', (event, folder) => {
+  return new Promise((resolve) => {
+    execFile('git', ['branch', '--show-current'], { cwd: folder }, (branchErr, branchOut) => {
+      if (branchErr) {
+        resolve({ isRepo: false });
+        return;
+      }
+      execFile('git', ['status', '--short'], { cwd: folder }, (statusErr, statusOut) => {
+        resolve(parseGitStatus(branchOut, statusErr ? '' : statusOut));
+      });
+    });
+  });
+});
+
+ipcMain.handle('roblox:playTest', (event, folder) => {
+  let files;
+  try {
+    files = fs.readdirSync(folder);
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+  const placeFile = findPlaceFile(files);
+  if (!placeFile) {
+    return { ok: false, error: 'No .rbxl or .rbxlx file found in project folder' };
+  }
+  shell.openPath(path.join(folder, placeFile));
+  return { ok: true };
 });

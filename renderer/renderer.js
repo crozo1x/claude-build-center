@@ -1,7 +1,28 @@
 const panesEl = document.getElementById('panes');
 const shellSelect = document.getElementById('shellSelect');
 const btnNewTerminal = document.getElementById('btnNewTerminal');
-const btnNewClaude = document.getElementById('btnNewClaude');
+const btnProjectFolder = document.getElementById('btnProjectFolder');
+const projectFolderLabel = document.getElementById('projectFolderLabel');
+const btnSyncStudio = document.getElementById('btnSyncStudio');
+const btnPlayTest = document.getElementById('btnPlayTest');
+
+function updateProjectFolderUI(folder) {
+  projectFolderLabel.textContent = folder || 'No project set';
+  btnSyncStudio.disabled = !folder;
+  btnSyncStudio.title = folder ? '' : 'Set a project folder first';
+  btnPlayTest.disabled = !folder;
+  btnPlayTest.title = folder ? '' : 'Set a project folder first';
+}
+
+window.BuildCenter.onProjectFolderChanged(updateProjectFolderUI);
+updateProjectFolderUI(window.BuildCenter.getProjectFolder());
+
+btnProjectFolder.addEventListener('click', async () => {
+  const result = await window.api.project.selectFolder();
+  if (result.canceled) return;
+  window.BuildCenter.setProjectFolder(result.folder);
+  if (window.BuildCenter.persistConfig) window.BuildCenter.persistConfig();
+});
 
 const sessions = new Map(); // id -> { term, fitAddon, paneEl }
 let counter = 0;
@@ -17,6 +38,8 @@ window.api.onExit(({ id }) => {
     const statusEl = s.paneEl.querySelector('.status');
     statusEl.textContent = 'exited';
     s.paneEl.classList.add('exited');
+    s.exited = true;
+    publishSessions();
   }
 });
 
@@ -25,7 +48,7 @@ function makeId() {
   return 'term-' + counter + '-' + Date.now();
 }
 
-function createPane({ title, autoRun }) {
+function createPane({ title, autoRun, kind, cwd }) {
   const id = makeId();
   const paneEl = document.createElement('div');
   paneEl.className = 'pane';
@@ -60,17 +83,24 @@ function createPane({ title, autoRun }) {
 
   term.onData((data) => window.api.input(id, data));
 
-  sessions.set(id, { term, fitAddon, paneEl });
+  sessions.set(id, { term, fitAddon, paneEl, title, kind: kind || 'terminal', exited: false });
+  publishSessions();
 
   window.api.spawn(id, {
     shell: shellSelect.value,
     cols: term.cols,
     rows: term.rows,
     autoRun,
+    cwd,
   }).then((res) => {
     if (res && res.ok === false) {
       term.write(`\r\n[failed to start shell: ${res.error}]\r\n`);
       paneEl.classList.add('exited');
+      const s = sessions.get(id);
+      if (s) {
+        s.exited = true;
+        publishSessions();
+      }
     }
   });
 
@@ -89,6 +119,7 @@ function createPane({ title, autoRun }) {
     resizeObserver.disconnect();
     term.dispose();
     sessions.delete(id);
+    publishSessions();
     paneEl.remove();
   });
 
@@ -105,12 +136,38 @@ function createPane({ title, autoRun }) {
   term.focus();
 }
 
+function publishSessions() {
+  window.BuildCenter.setSessions(
+    Array.from(sessions.entries()).map(([id, s]) => ({
+      id,
+      title: s.title,
+      kind: s.kind,
+      exited: s.exited,
+    }))
+  );
+}
+
 btnNewTerminal.addEventListener('click', () => {
   createPane({ title: 'Terminal' });
 });
 
-btnNewClaude.addEventListener('click', () => {
-  createPane({ title: 'Claude Code', autoRun: 'claude' });
+const btnNewScript = document.getElementById('btnNewScript');
+
+btnNewScript.addEventListener('click', () => {
+  createPane({ title: 'New Script', autoRun: 'claude' });
+});
+
+btnSyncStudio.addEventListener('click', () => {
+  const folder = window.BuildCenter.getProjectFolder();
+  createPane({ title: 'Sync to Studio', kind: 'sync-to-studio', autoRun: 'rojo serve', cwd: folder });
+});
+
+btnPlayTest.addEventListener('click', async () => {
+  const folder = window.BuildCenter.getProjectFolder();
+  const result = await window.api.roblox.playTest(folder);
+  if (!result.ok) {
+    alert('Play/Test failed: ' + result.error);
+  }
 });
 
 // Start with one plain terminal open so the app isn't empty on launch.

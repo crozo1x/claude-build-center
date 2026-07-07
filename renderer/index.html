@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Build Center</title>
   <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css" />
+  <link rel="stylesheet" href="../node_modules/gridstack/dist/gridstack.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -19,11 +20,19 @@
     <button id="btnNewScript">New Script</button>
     <button id="btnSyncStudio" disabled title="Set a project folder first">Sync to Studio</button>
     <button id="btnPlayTest" disabled title="Set a project folder first">Play / Test</button>
+    <button id="btnAddWidget">+ Widget</button>
   </div>
-  <div id="panes"></div>
+  <div id="workspace">
+    <div id="panes"></div>
+    <div id="widgetCanvas" class="grid-stack"></div>
+  </div>
+  <div id="widgetPicker" class="widget-picker hidden"></div>
   <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
   <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="../node_modules/gridstack/dist/gridstack-all.js"></script>
   <script src="state.js"></script>
+  <script src="lib/rojo-status.js"></script>
+  <script src="widgets.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

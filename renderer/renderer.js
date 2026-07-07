@@ -21,6 +21,7 @@ btnProjectFolder.addEventListener('click', async () => {
   const result = await window.api.project.selectFolder();
   if (result.canceled) return;
   window.BuildCenter.setProjectFolder(result.folder);
+  if (window.BuildCenter.persistConfig) window.BuildCenter.persistConfig();
 });
 
 const sessions = new Map(); // id -> { term, fitAddon, paneEl }

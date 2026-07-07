@@ -193,9 +193,14 @@ btnSyncStudio.addEventListener('click', async () => {
 
 btnPlayTest.addEventListener('click', async () => {
   const folder = window.BuildCenter.getProjectFolder();
+  const status = await window.api.rojo.getStatus(folder);
   const result = await window.api.roblox.playTest(folder);
   if (!result.ok) {
     alert('Play/Test failed: ' + result.error);
+    return;
+  }
+  if (status.state !== 'serving') {
+    showToolbarNotice("Rojo isn't syncing — this may open a stale place.", 4000);
   }
 });
 

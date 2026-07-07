@@ -11,4 +11,7 @@ contextBridge.exposeInMainWorld('api', {
     load: () => ipcRenderer.invoke('config:load'),
     save: (config) => ipcRenderer.invoke('config:save', config),
   },
+  project: {
+    selectFolder: () => ipcRenderer.invoke('project:selectFolder'),
+  },
 });

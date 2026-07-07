@@ -1,7 +1,21 @@
 const panesEl = document.getElementById('panes');
 const shellSelect = document.getElementById('shellSelect');
 const btnNewTerminal = document.getElementById('btnNewTerminal');
-const btnNewClaude = document.getElementById('btnNewClaude');
+const btnProjectFolder = document.getElementById('btnProjectFolder');
+const projectFolderLabel = document.getElementById('projectFolderLabel');
+
+function updateProjectFolderUI(folder) {
+  projectFolderLabel.textContent = folder || 'No project set';
+}
+
+window.BuildCenter.onProjectFolderChanged(updateProjectFolderUI);
+updateProjectFolderUI(window.BuildCenter.getProjectFolder());
+
+btnProjectFolder.addEventListener('click', async () => {
+  const result = await window.api.project.selectFolder();
+  if (result.canceled) return;
+  window.BuildCenter.setProjectFolder(result.folder);
+});
 
 const sessions = new Map(); // id -> { term, fitAddon, paneEl }
 let counter = 0;
@@ -107,10 +121,6 @@ function createPane({ title, autoRun }) {
 
 btnNewTerminal.addEventListener('click', () => {
   createPane({ title: 'Terminal' });
-});
-
-btnNewClaude.addEventListener('click', () => {
-  createPane({ title: 'Claude Code', autoRun: 'claude' });
 });
 
 // Start with one plain terminal open so the app isn't empty on launch.

@@ -9,16 +9,19 @@
 <body>
   <div id="toolbar">
     <div id="brand">BUILD CENTER</div>
+    <button id="btnProjectFolder" title="Set the Roblox project folder">Set Project Folder</button>
+    <span id="projectFolderLabel">No project set</span>
     <select id="shellSelect" title="Shell for new terminals">
       <option value="powershell.exe">PowerShell</option>
       <option value="cmd.exe">cmd</option>
     </select>
     <button id="btnNewTerminal">+ Terminal</button>
-    <button id="btnNewClaude">+ Claude Session</button>
+    <button id="btnNewScript">New Script</button>
   </div>
   <div id="panes"></div>
   <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
   <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="state.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

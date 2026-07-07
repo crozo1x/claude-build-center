@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('path');
 const os = require('os');
 const pty = require('node-pty');
@@ -122,4 +122,14 @@ ipcMain.handle('config:load', () => {
 ipcMain.handle('config:save', (event, config) => {
   saveConfig(configPath, config);
   return { ok: true };
+});
+
+ipcMain.handle('project:selectFolder', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return { canceled: true };
+  }
+  return { canceled: false, folder: result.filePaths[0] };
 });

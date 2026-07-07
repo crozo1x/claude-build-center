@@ -6,6 +6,7 @@ Currently being reworked into a Roblox-first "vibe coding" control center — se
 
 ## Recent Changes
 
+- **2026-07-06** — GUI Modernization in progress (`feature/gui-modernization`): added config persistence module (`lib/config-store.js`) with test coverage, establishing the `node --test` convention for the rest of the rework.
 - **2026-07-06** — Initial commit: Electron control center with terminal pane grid (v1 scaffold).
 
 ## What v1 does

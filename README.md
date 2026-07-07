@@ -6,6 +6,7 @@ Currently being reworked into a Roblox-first "vibe coding" control center — se
 
 ## Recent Changes
 
+- **2026-07-06** — GUI Modernization: renamed "+ Claude Session" to "New Script" and added live session state tracking (title/kind/exited) feeding the upcoming widget system.
 - **2026-07-06** — GUI Modernization: added a git status IPC handler (`window.api.git.status`), wiring the earlier parser to real `git` CLI calls.
 - **2026-07-06** — GUI Modernization: added the project folder picker ("Set Project Folder" button) and a shared renderer state module for the widget system to come.
 - **2026-07-06** — GUI Modernization: added config load/save IPC handlers, persisting to a JSON file under Electron's userData directory.

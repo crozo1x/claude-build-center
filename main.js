@@ -29,6 +29,12 @@ function createWindow() {
     height: 900,
     backgroundColor: '#05070a',
     title: 'BasePlate',
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#0d1117',
+      symbolColor: '#c9d1d9',
+      height: 46,
+    },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

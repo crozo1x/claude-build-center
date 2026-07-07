@@ -6,6 +6,7 @@ Currently being reworked into a Roblox-first "vibe coding" control center — se
 
 ## Recent Changes
 
+- **2026-07-06** — GUI Modernization: added the Rojo sync status module (`renderer/lib/rojo-status.js`), the last of the four pure logic modules underpinning the widget system.
 - **2026-07-06** — GUI Modernization: added a Roblox place-file lookup module (`lib/find-place-file.js`) with tests.
 - **2026-07-06** — GUI Modernization: added a git status parser module (`lib/git-status.js`) with tests.
 - **2026-07-06** — GUI Modernization in progress (`feature/gui-modernization`): added config persistence module (`lib/config-store.js`) with test coverage, establishing the `node --test` convention for the rest of the rework.

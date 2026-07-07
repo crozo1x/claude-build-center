@@ -17,7 +17,7 @@ function createWindow() {
     width: 1440,
     height: 900,
     backgroundColor: '#05070a',
-    title: 'Build Center',
+    title: 'BasePlate',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

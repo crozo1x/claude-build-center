@@ -1,7 +1,7 @@
 {
-  "name": "claude-build-center",
+  "name": "baseplate",
   "version": "0.1.0",
-  "description": "Local control center for Claude Code terminals and local AI agents",
+  "description": "BasePlate - Roblox VibeCoding Experience: a local control center for building Roblox games with Claude Code",
   "author": {
     "name": "crozo1x",
     "email": "selfbrandbusiness@gmail.com"
@@ -15,8 +15,8 @@
     "dist": "electron-builder --publish never"
   },
   "build": {
-    "appId": "com.crozo1x.claude-build-center",
-    "productName": "Build Center",
+    "appId": "com.crozo1x.baseplate",
+    "productName": "BasePlate",
     "npmRebuild": false,
     "asarUnpack": [
       "**/node_modules/node-pty/**/*"

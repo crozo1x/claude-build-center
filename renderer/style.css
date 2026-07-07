@@ -71,6 +71,20 @@ html, body {
   border-color: #30363d;
 }
 
+#btnUpdateAvailable {
+  background: #238636;
+  border-color: #2ea043;
+  color: #ffffff;
+}
+
+#btnUpdateAvailable:hover {
+  background: #2ea043;
+}
+
+#btnUpdateAvailable.hidden {
+  display: none;
+}
+
 #workspace {
   position: relative;
   height: calc(100vh - 46px);

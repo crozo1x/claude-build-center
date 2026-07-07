@@ -5,6 +5,7 @@ const btnProjectFolder = document.getElementById('btnProjectFolder');
 const projectFolderLabel = document.getElementById('projectFolderLabel');
 const btnSyncStudio = document.getElementById('btnSyncStudio');
 const btnPlayTest = document.getElementById('btnPlayTest');
+const btnUpdateAvailable = document.getElementById('btnUpdateAvailable');
 
 function updateProjectFolderUI(folder) {
   projectFolderLabel.textContent = folder || 'No project set';
@@ -172,3 +173,23 @@ btnPlayTest.addEventListener('click', async () => {
 
 // Start with one plain terminal open so the app isn't empty on launch.
 createPane({ title: 'Terminal' });
+
+window.api.update.onStatus((payload) => {
+  if (payload.state === 'available') {
+    btnUpdateAvailable.classList.remove('hidden');
+  }
+});
+
+btnUpdateAvailable.addEventListener('click', async () => {
+  btnUpdateAvailable.disabled = true;
+  btnUpdateAvailable.textContent = 'Updating…';
+  const result = await window.api.update.download();
+  if (!result.ok) {
+    alert('Update failed: ' + result.error);
+    btnUpdateAvailable.disabled = false;
+    btnUpdateAvailable.textContent = 'Update Available';
+  }
+  // On success, the app will quit and restart itself once the download
+  // finishes (see Task 4's 'downloaded' handling in main.js) — no further
+  // UI state is needed here.
+});

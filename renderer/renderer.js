@@ -89,8 +89,11 @@ function createPane({ title, autoRun, kind, cwd }) {
     if (res && res.ok === false) {
       term.write(`\r\n[failed to start shell: ${res.error}]\r\n`);
       paneEl.classList.add('exited');
-      sessions.get(id).exited = true;
-      publishSessions();
+      const s = sessions.get(id);
+      if (s) {
+        s.exited = true;
+        publishSessions();
+      }
     }
   });
 

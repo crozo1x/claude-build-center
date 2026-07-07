@@ -2,9 +2,11 @@ const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const os = require('os');
 const pty = require('node-pty');
+const { loadConfig, saveConfig } = require('./lib/config-store');
 
 const terminals = new Map(); // id -> pty process
 let mainWindow;
+const configPath = path.join(app.getPath('userData'), 'config.json');
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -111,4 +113,13 @@ ipcMain.on('pty:kill', (event, { id }) => {
     }
     terminals.delete(id);
   }
+});
+
+ipcMain.handle('config:load', () => {
+  return loadConfig(configPath);
+});
+
+ipcMain.handle('config:save', (event, config) => {
+  saveConfig(configPath, config);
+  return { ok: true };
 });

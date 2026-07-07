@@ -7,4 +7,8 @@ contextBridge.exposeInMainWorld('api', {
   kill: (id) => ipcRenderer.send('pty:kill', { id }),
   onData: (cb) => ipcRenderer.on('pty:data', (_event, payload) => cb(payload)),
   onExit: (cb) => ipcRenderer.on('pty:exit', (_event, payload) => cb(payload)),
+  config: {
+    load: () => ipcRenderer.invoke('config:load'),
+    save: (config) => ipcRenderer.invoke('config:save', config),
+  },
 });

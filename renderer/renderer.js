@@ -92,6 +92,7 @@ function createPane({ title, autoRun, kind, cwd }) {
     rows: term.rows,
     autoRun,
     cwd,
+    kind: kind || 'terminal',
   }).then((res) => {
     if (res && res.ok === false) {
       term.write(`\r\n[failed to start shell: ${res.error}]\r\n`);

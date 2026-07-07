@@ -55,7 +55,7 @@ app.on('activate', () => {
 });
 
 ipcMain.handle('pty:spawn', (event, opts) => {
-  const { id, shell, cwd, cols, rows, autoRun } = opts;
+  const { id, shell, cwd, cols, rows, autoRun, kind } = opts;
   const shellPath = shell || process.env.COMSPEC || 'powershell.exe';
 
   let term;

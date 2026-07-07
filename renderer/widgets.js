@@ -1,6 +1,71 @@
 let grid;
 
-const WIDGET_CATALOG = [];
+function renderActiveSessions(container) {
+  function draw(sessions) {
+    if (!sessions || sessions.length === 0) {
+      container.innerHTML = '<p class="widget-empty">No sessions open</p>';
+      return;
+    }
+    container.innerHTML =
+      '<ul class="session-list">' +
+      sessions
+        .map((s) => `<li class="${s.exited ? 'exited' : ''}">${s.title} <span class="kind">${s.kind}</span></li>`)
+        .join('') +
+      '</ul>';
+  }
+  draw(window.BuildCenter.getSessions());
+  window.BuildCenter.onSessionsChanged(draw);
+}
+
+function renderGitStatus(container) {
+  async function draw() {
+    const folder = window.BuildCenter.getProjectFolder();
+    if (!folder) {
+      container.innerHTML = '<p class="widget-empty">Not configured — set a project folder</p>';
+      return;
+    }
+    const status = await window.api.git.status(folder);
+    if (!status.isRepo) {
+      container.innerHTML = '<p class="widget-empty">Not a git repository</p>';
+      return;
+    }
+    container.innerHTML = `
+      <p class="git-branch">${status.branch}</p>
+      <p class="git-dirty">${status.dirty ? status.dirtyCount + ' uncommitted change(s)' : 'clean'}</p>
+    `;
+  }
+  draw();
+  window.BuildCenter.onProjectFolderChanged(draw);
+  setInterval(draw, 5000);
+}
+
+function renderRojoStatus(container) {
+  function draw() {
+    const folder = window.BuildCenter.getProjectFolder();
+    if (!folder) {
+      container.innerHTML = '<p class="widget-empty">Not configured — set a project folder</p>';
+      return;
+    }
+    const status = window.BuildCenter.computeRojoStatus(window.BuildCenter.getSessions());
+    container.innerHTML = `<p class="rojo-state ${status.connected ? 'connected' : 'disconnected'}">${
+      status.connected ? 'Synced' : 'Not syncing'
+    }</p>`;
+  }
+  draw();
+  window.BuildCenter.onSessionsChanged(draw);
+  window.BuildCenter.onProjectFolderChanged(draw);
+}
+
+function renderRobloxAnalytics(container) {
+  container.innerHTML = '<p class="widget-empty">Coming soon — requires a Roblox Open Cloud API key.</p>';
+}
+
+const WIDGET_CATALOG = [
+  { type: 'active-sessions', title: 'Active Sessions', render: renderActiveSessions },
+  { type: 'git-status', title: 'Git Status', render: renderGitStatus },
+  { type: 'rojo-sync-status', title: 'Rojo Sync Status', render: renderRojoStatus },
+  { type: 'roblox-analytics', title: 'Roblox Analytics', render: renderRobloxAnalytics },
+];
 
 function addWidgetToGrid(type, position) {
   const catalogEntry = WIDGET_CATALOG.find((w) => w.type === type);
@@ -45,7 +110,8 @@ function persistConfig() {
         };
       })
     : [];
-  window.api.config.save({ projectFolder: window.BuildCenter.getProjectFolder(), widgets: items });
+  window.api.config.save({ projectFolder: window.BuildCenter.getProjectFolder(), widgets: items })
+    .catch((err) => console.error('Failed to save config:', err));
 }
 
 function toggleWidgetPicker() {
@@ -67,7 +133,13 @@ function buildWidgetPicker() {
 }
 
 async function initWidgets() {
-  const config = await window.api.config.load();
+  let config;
+  try {
+    config = await window.api.config.load();
+  } catch (err) {
+    console.error('Failed to load config, starting with defaults:', err);
+    config = { projectFolder: null, widgets: [] };
+  }
   window.BuildCenter.setProjectFolder(config.projectFolder);
   grid = GridStack.init({ float: true, cellHeight: 80, column: 12 }, '#widgetCanvas');
   config.widgets.forEach((w) => addWidgetToGrid(w.type, w));

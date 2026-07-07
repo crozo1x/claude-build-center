@@ -222,3 +222,42 @@ html, body {
   padding: 4px;
   overflow: hidden;
 }
+
+.session-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.session-list li {
+  padding: 4px 0;
+  border-bottom: 1px solid #21262d;
+}
+
+.session-list li.exited {
+  color: #f85149;
+}
+
+.session-list .kind {
+  color: #8b949e;
+  font-size: 10px;
+  margin-left: 6px;
+}
+
+.git-branch {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.git-dirty {
+  color: #8b949e;
+  margin: 0;
+}
+
+.rojo-state.connected {
+  color: #3fb950;
+}
+
+.rojo-state.disconnected {
+  color: #8b949e;
+}

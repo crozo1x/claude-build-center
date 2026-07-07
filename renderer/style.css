@@ -280,11 +280,19 @@ html, body {
   margin: 0;
 }
 
-.rojo-state.connected {
+.rojo-state.serving {
   color: #3fb950;
 }
 
-.rojo-state.disconnected {
+.rojo-state.starting {
+  color: #d29922;
+}
+
+.rojo-state.error {
+  color: #f85149;
+}
+
+.rojo-state.not-started {
   color: #8b949e;
 }
 

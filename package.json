@@ -1,7 +1,8 @@
 {
-  "name": "claude-build-center",
+  "name": "baseplate",
+  "productName": "BasePlate",
   "version": "0.1.0",
-  "description": "Local control center for Claude Code terminals and local AI agents",
+  "description": "BasePlate - Roblox VibeCoding Experience: a local control center for building Roblox games with Claude Code",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

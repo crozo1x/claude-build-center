@@ -1,4 +1,4 @@
-# Build Center
+# BasePlate - Roblox VibeCoding Experience
 
 A Roblox-first "vibe coding" control center built on Electron: real terminal panes (PowerShell/cmd) for running Claude Code sessions side by side, a live widget dashboard, and quick-launch buttons for Roblox dev workflows (Rojo sync, Play/Test in Studio).
 
@@ -6,7 +6,7 @@ See `docs/superpowers/specs/` for design docs and `docs/superpowers/plans/` for 
 
 ## What it does
 
-- **Set Project Folder** — point Build Center at a Roblox project directory via a native folder picker. Widgets and the Sync/Play buttons operate on this folder, and the selection survives restarts.
+- **Set Project Folder** — point BasePlate at a Roblox project directory via a native folder picker. Widgets and the Sync/Play buttons operate on this folder, and the selection survives restarts.
 - **New Script** / **+ Terminal** — open a Claude Code session or plain shell pane. Each pane is a real pty-backed shell via `node-pty` + `xterm.js` — full interactivity, colors, prompts, everything.
 - **Sync to Studio** — runs `rojo serve` against the project folder in a pane. Disabled until a project folder is set.
 - **Play / Test** — opens the project's `.rbxl`/`.rbxlx` file with its OS default handler (Roblox Studio). Disabled until a project folder is set.

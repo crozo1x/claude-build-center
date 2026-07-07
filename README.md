@@ -2,6 +2,12 @@
 
 Local Electron app: a control-center window that opens real terminal panes (PowerShell/cmd) in a grid, so you can run multiple Claude Code sessions side by side. Each pane is a real pty-backed shell via `node-pty` + `xterm.js` — full interactivity, colors, prompts, everything.
 
+Currently being reworked into a Roblox-first "vibe coding" control center — see `docs/superpowers/specs/` for design docs as they land.
+
+## Recent Changes
+
+- **2026-07-06** — Initial commit: Electron control center with terminal pane grid (v1 scaffold).
+
 ## What v1 does
 
 - "+ Terminal" — opens a new plain shell pane.

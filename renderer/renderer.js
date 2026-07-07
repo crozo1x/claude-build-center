@@ -5,6 +5,23 @@ const btnProjectFolder = document.getElementById('btnProjectFolder');
 const projectFolderLabel = document.getElementById('projectFolderLabel');
 const btnSyncStudio = document.getElementById('btnSyncStudio');
 const btnPlayTest = document.getElementById('btnPlayTest');
+const toolbarNotice = document.getElementById('toolbarNotice');
+let toolbarNoticeTimer = null;
+
+function showToolbarNotice(html, durationMs) {
+  toolbarNotice.innerHTML = html;
+  toolbarNotice.classList.remove('hidden');
+  if (toolbarNoticeTimer) clearTimeout(toolbarNoticeTimer);
+  if (durationMs) {
+    toolbarNoticeTimer = setTimeout(() => {
+      toolbarNotice.classList.add('hidden');
+    }, durationMs);
+  }
+}
+
+toolbarNotice.addEventListener('click', () => {
+  toolbarNotice.classList.add('hidden');
+});
 
 function updateProjectFolderUI(folder) {
   projectFolderLabel.textContent = folder || 'No project set';
@@ -158,7 +175,15 @@ btnNewScript.addEventListener('click', () => {
   createPane({ title: 'New Script', autoRun: 'claude' });
 });
 
-btnSyncStudio.addEventListener('click', () => {
+btnSyncStudio.addEventListener('click', async () => {
+  const installed = await window.api.rojo.checkInstalled();
+  if (!installed.installed) {
+    showToolbarNotice(
+      'Rojo not found — see the <a href="https://rojo.space/docs/installation/" target="_blank">install guide</a>',
+      null
+    );
+    return;
+  }
   const folder = window.BuildCenter.getProjectFolder();
   createPane({ title: 'Sync to Studio', kind: 'sync-to-studio', autoRun: 'rojo serve', cwd: folder });
 });

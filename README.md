@@ -41,6 +41,28 @@ npm start
 
 (`npm run dev` is an alias for `npm start`.)
 
+### Build a Windows installer or EXE
+
+```
+npm run dist:win
+```
+
+This generates `dist/BasePlate-Setup-<version>.exe`. Double-click that installer to install BasePlate with the app icon, Start Menu shortcut, and Desktop shortcut.
+
+For a local unpacked build without an installer:
+
+```
+npm run pack:win
+```
+
+Then double-click `dist/win-unpacked/BasePlate.exe`.
+
+If you change the logo source, regenerate the Windows icon assets with:
+
+```
+npm run icon
+```
+
 If `npm install` fails specifically on `node-pty`, and you're sure Build Tools + Python are installed, try:
 
 ```
@@ -64,6 +86,8 @@ baseplate/
   package.json
   main.js                    Electron main process: window, pty lifecycle, and all IPC handlers
   preload.js                 contextBridge: exposes a locked-down window.api to the renderer
+  assets/                    BasePlate app icon source and generated Windows icon files
+  scripts/                   Build helper scripts such as icon generation
   lib/                       Pure, unit-tested logic used by main.js
     config-store.js          Load/save the JSON config file (project folder + widget layout)
     git-status.js            Parses raw `git` CLI output into a status object
@@ -108,6 +132,7 @@ baseplate/
 
 ## Recent Changes
 
+- **2026-07-08** - Windows App Packaging: added BasePlate app icon assets, installer shortcut config, and build scripts for a double-clickable Windows installer or unpacked EXE.
 - **2026-07-07** — Auto-Update System: packaged the app as a Windows installer (unsigned, via electron-builder), added a GitHub Actions release pipeline, and a toolbar "Update Available" button that downloads and restarts the app on click.
 - **2026-07-06** — GUI Modernization: visual polish pass — toolbar/pane/widget shadows, greyed-out disabled buttons, and fixed a z-index conflict so maximized panes correctly stack above the widget canvas.
 - **2026-07-06** — GUI Modernization: project folder selection now survives restarts, saved alongside the widget layout.

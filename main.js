@@ -29,6 +29,7 @@ function createWindow() {
     height: 900,
     backgroundColor: '#05070a',
     title: 'BasePlate',
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: '#0d1117',

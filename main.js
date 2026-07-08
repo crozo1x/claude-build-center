@@ -7,6 +7,11 @@ const { execFile } = require('child_process');
 const { loadConfig, saveConfig } = require('./lib/config-store');
 const { parseGitStatus } = require('./lib/git-status');
 const { findPlaceFile } = require('./lib/find-place-file');
+const {
+  normalizeFolderArg,
+  sanitizeConfig,
+  sanitizeTerminalSpawnOptions,
+} = require('./lib/ipc-guards');
 const { autoUpdater } = require('electron-updater');
 const { attachUpdaterEvents } = require('./lib/updater');
 
@@ -79,8 +84,18 @@ app.on('activate', () => {
 });
 
 ipcMain.handle('pty:spawn', (event, opts) => {
-  const { id, shell, cwd, cols, rows, autoRun } = opts;
-  const shellPath = shell || process.env.COMSPEC || 'powershell.exe';
+  const options = sanitizeTerminalSpawnOptions(opts, {
+    defaultShell: process.env.COMSPEC || 'powershell.exe',
+    defaultCwd: os.homedir(),
+  });
+  if (!options.ok) {
+    return { ok: false, error: options.error };
+  }
+
+  const { id, shellPath, cwd, cols, rows, autoRun } = options.value;
+  if (terminals.has(id)) {
+    return { ok: false, error: 'Terminal id is already in use' };
+  }
 
   let term;
   try {
@@ -148,7 +163,7 @@ ipcMain.handle('config:load', () => {
 });
 
 ipcMain.handle('config:save', (event, config) => {
-  saveConfig(configPath, config);
+  saveConfig(configPath, sanitizeConfig(config));
   return { ok: true };
 });
 
@@ -163,13 +178,16 @@ ipcMain.handle('project:selectFolder', async () => {
 });
 
 ipcMain.handle('git:status', (event, folder) => {
+  const folderResult = normalizeFolderArg(folder);
+  if (!folderResult.ok) return { isRepo: false, error: folderResult.error };
+
   return new Promise((resolve) => {
-    execFile('git', ['branch', '--show-current'], { cwd: folder }, (branchErr, branchOut) => {
+    execFile('git', ['branch', '--show-current'], { cwd: folderResult.folder }, (branchErr, branchOut) => {
       if (branchErr) {
         resolve({ isRepo: false });
         return;
       }
-      execFile('git', ['status', '--short'], { cwd: folder }, (statusErr, statusOut) => {
+      execFile('git', ['status', '--short'], { cwd: folderResult.folder }, (statusErr, statusOut) => {
         resolve(parseGitStatus(branchOut, statusErr ? '' : statusOut));
       });
     });
@@ -177,9 +195,12 @@ ipcMain.handle('git:status', (event, folder) => {
 });
 
 ipcMain.handle('roblox:playTest', (event, folder) => {
+  const folderResult = normalizeFolderArg(folder);
+  if (!folderResult.ok) return { ok: false, error: folderResult.error };
+
   let files;
   try {
-    files = fs.readdirSync(folder);
+    files = fs.readdirSync(folderResult.folder);
   } catch (err) {
     return { ok: false, error: String(err) };
   }
@@ -187,7 +208,7 @@ ipcMain.handle('roblox:playTest', (event, folder) => {
   if (!placeFile) {
     return { ok: false, error: 'No .rbxl or .rbxlx file found in project folder' };
   }
-  shell.openPath(path.join(folder, placeFile));
+  shell.openPath(path.join(folderResult.folder, placeFile));
   return { ok: true };
 });
 

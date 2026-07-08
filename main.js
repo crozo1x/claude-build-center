@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog, shell, session } = require('electron');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -14,6 +14,11 @@ const {
 } = require('./lib/ipc-guards');
 const { autoUpdater } = require('electron-updater');
 const { attachUpdaterEvents } = require('./lib/updater');
+const {
+  buildSecurityHeaders,
+  isExternalHttpUrl,
+  shouldAllowNavigation,
+} = require('./lib/security-policy');
 
 const terminals = new Map(); // id -> pty process
 let mainWindow;
@@ -27,6 +32,25 @@ attachUpdaterEvents(autoUpdater, (state) => {
     autoUpdater.quitAndInstall();
   }
 });
+
+function applyRendererSecurityPolicy() {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({ responseHeaders: buildSecurityHeaders(details.responseHeaders) });
+  });
+}
+
+function bindWindowSecurity(win) {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (isExternalHttpUrl(url)) shell.openExternal(url).catch(() => {});
+    return { action: 'deny' };
+  });
+
+  win.webContents.on('will-navigate', (event, url) => {
+    if (shouldAllowNavigation(url, __dirname)) return;
+    event.preventDefault();
+    if (isExternalHttpUrl(url)) shell.openExternal(url).catch(() => {});
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -49,6 +73,8 @@ function createWindow() {
     },
   });
 
+  bindWindowSecurity(mainWindow);
+
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
   mainWindow.on('closed', () => {
@@ -58,6 +84,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
+  applyRendererSecurityPolicy();
   createWindow();
   setTimeout(() => {
     autoUpdater.checkForUpdates().catch(() => {

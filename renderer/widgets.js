@@ -170,4 +170,10 @@ async function initWidgets() {
   window.BuildCenter.persistConfig = persistConfig;
 }
 
+window.BuildCenter.refreshWidgetGrid = function () {
+  if (grid) {
+    grid.onParentResize();
+  }
+};
+
 initWidgets();

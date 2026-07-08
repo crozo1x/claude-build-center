@@ -148,6 +148,17 @@ function publishSessions() {
   );
 }
 
+window.BuildCenter.refitAllSessions = function () {
+  sessions.forEach((s, id) => {
+    try {
+      s.fitAddon.fit();
+      window.api.resize(id, s.term.cols, s.term.rows);
+    } catch (e) {
+      // ignore transient resize races, matches existing ResizeObserver pattern
+    }
+  });
+};
+
 btnNewTerminal.addEventListener('click', () => {
   createPane({ title: 'Terminal' });
 });

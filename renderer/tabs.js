@@ -9,6 +9,14 @@ function initTabs() {
     panels.forEach((panel) => {
       panel.classList.toggle('active', panel.id === 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
     });
+    if (tabName === 'advanced') {
+      if (window.BuildCenter && window.BuildCenter.refitAllSessions) {
+        window.BuildCenter.refitAllSessions();
+      }
+      if (window.BuildCenter && window.BuildCenter.refreshWidgetGrid) {
+        window.BuildCenter.refreshWidgetGrid();
+      }
+    }
   }
 
   buttons.forEach((btn) => {

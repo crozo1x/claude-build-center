@@ -4,6 +4,8 @@ A Roblox-first "vibe coding" control center built on Electron: real terminal pan
 
 See `docs/superpowers/specs/` for design docs and `docs/superpowers/plans/` for implementation plans as they land.
 
+Agent handoff prompts and release instructions live in `docs/agent-handoff/` for coordinated multi-agent work.
+
 ## What it does
 
 - **Set Project Folder** — point BasePlate at a Roblox project directory via a native folder picker. Widgets and the Sync/Play buttons operate on this folder, and the selection survives restarts.

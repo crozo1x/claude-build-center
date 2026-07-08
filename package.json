@@ -11,8 +11,11 @@
     "start": "electron .",
     "dev": "electron .",
     "rebuild": "electron-rebuild -f -w node-pty",
+    "icon": "node scripts/generate-icon.js",
     "test": "node --test",
-    "dist": "electron-builder --publish never"
+    "dist": "npm run icon && electron-builder --publish never",
+    "dist:win": "npm run icon && electron-builder --win --publish never",
+    "pack:win": "npm run icon && electron-builder --win --dir --publish never"
   },
   "build": {
     "appId": "com.crozo1x.baseplate",
@@ -22,12 +25,23 @@
       "**/node_modules/node-pty/**/*"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "artifactName": "BasePlate-Setup-${version}.${ext}"
     },
     "publish": {
       "provider": "github",
       "owner": "crozo1x",
       "repo": "baseplate"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BasePlate"
     }
   },
   "dependencies": {

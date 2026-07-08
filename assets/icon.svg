@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="BasePlate app icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101826"/>
+      <stop offset="0.55" stop-color="#172a45"/>
+      <stop offset="1" stop-color="#0b5f78"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#36e58a"/>
+      <stop offset="1" stop-color="#13a8d8"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="52" fill="url(#bg)"/>
+  <rect x="24" y="24" width="208" height="208" rx="42" fill="none" stroke="#65f2c2" stroke-opacity="0.28" stroke-width="6"/>
+  <path d="M55 178h146l20 26H35l20-26Z" fill="url(#plate)"/>
+  <path d="M72 70h72c30 0 48 15 48 39 0 15-8 27-21 33 16 5 25 18 25 36 0 28-20 44-52 44H72V70Zm44 33v26h25c12 0 19-5 19-13s-7-13-19-13h-25Zm0 58v28h29c13 0 20-5 20-14s-7-14-20-14h-29Z" fill="#f7fbff"/>
+  <path d="M54 177h148" stroke="#0b5f78" stroke-opacity="0.38" stroke-width="5"/>
+</svg>

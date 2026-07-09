@@ -1,24 +1,18 @@
-# BasePlate - Roblox VibeCoding Experience
+# BasePlate - Roblox Vibe Coding Coach
 
-A Roblox-first "vibe coding" control center built on Electron: real terminal panes (PowerShell/cmd) for running Claude Code sessions side by side, a live widget dashboard, and quick-launch buttons for Roblox dev workflows (Rojo sync, Play/Test in Studio).
+A guided path from "I have a Roblox game idea" to a real build plan, reference Luau scripts, and practical debugging help — built for beginners, not just developers. The existing terminal/Claude Code control center is still here, now under the **Advanced** tab, for anyone who wants direct shell/AI-session access.
 
 See `docs/superpowers/specs/` for design docs and `docs/superpowers/plans/` for implementation plans as they land.
 
-Agent handoff prompts and release instructions live in `docs/agent-handoff/` for coordinated multi-agent work.
-
 ## What it does
 
-- **Set Project Folder** — point BasePlate at a Roblox project directory via a native folder picker. Widgets and the Sync/Play buttons operate on this folder, and the selection survives restarts.
-- **New Script** / **+ Terminal** — open a Claude Code session or plain shell pane. Each pane is a real pty-backed shell via `node-pty` + `xterm.js` — full interactivity, colors, prompts, everything.
-- **Sync to Studio** — runs `rojo serve` against the project folder in a pane. Disabled until a project folder is set.
-- **Play / Test** — opens the project's `.rbxl`/`.rbxlx` file with its OS default handler (Roblox Studio). Disabled until a project folder is set.
-- **Widget canvas** — a freeform, drag-and-resize dashboard (powered by GridStack.js) overlaying the terminal grid. Add widgets via the "+ Widget" picker:
-  - **Active Sessions** — live roster of open terminal panes and their state.
-  - **Git Status** — current branch and dirty state of the project folder, polling every 5s.
-  - **Rojo Sync Status** — whether a "Sync to Studio" session is currently running.
-  - **Roblox Analytics** — stubbed "coming soon" card; real Roblox Open Cloud integration is a separate future project.
-  - Widget layout (position, size, which widgets exist) persists across restarts alongside the project folder.
-- No native menu bar (File/Edit/View/Window/Help) — removed for a cleaner control-center feel.
+- **Idea** — describe your game in your own words and pick genre/feature chips (Simulator, Obby, Tycoon, Pet Game, Fighting Arena, Round-Based Minigame, Leaderstats, Shop, Data Saving, UI Polish).
+- **Plan** — a deterministically generated (no AI call) build plan: concept summary, core loop, Roblox services you'll need, an Explorer-style folder tree, a setup checklist, a playtest checklist that explicitly calls out multi-player testing, and client/server safety notes.
+- **Scripts** — 4 ready-to-use reference Luau scripts (leaderstats, a collectible pickup, a sell zone, a currency display) with filename, exact Studio placement path, purpose, one-click copy for code and path, and a persisted "tested" checkbox per script.
+- **Debug** — paste a Roblox Studio Output error and get a structured diagnosis (problem, likely cause, fix steps, what to test next) for the most common beginner mistakes (nil indexing, missing members, infinite yields, RemoteEvent issues, DataStore problems, wrong script type/location).
+- **Advanced** — the original terminal/Claude Code control center: real pty-backed terminal panes, Rojo sync, Play/Test, and the widget dashboard, unchanged.
+
+**Current limitations (MVP):** Plan generation and Scripts are template-based, not AI-generated — they cover common beginner patterns, not every possible game. Debug recognizes 6 specific error signatures; anything else gets general troubleshooting guidance and a pointer to use Advanced's "New Script" for a real Claude Code session on harder problems.
 
 ## Prerequisites (Windows)
 

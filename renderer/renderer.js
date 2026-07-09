@@ -55,7 +55,7 @@ function createPane({ title, autoRun, kind, cwd }) {
   paneEl.className = 'pane';
   paneEl.innerHTML = `
     <div class="pane-header">
-      <span class="title">${title}</span>
+      <span class="title"></span>
       <span class="status"></span>
       <div class="pane-actions">
         <button class="btn-max" title="Maximize / restore">⤢</button>
@@ -64,6 +64,7 @@ function createPane({ title, autoRun, kind, cwd }) {
     </div>
     <div class="pane-body"></div>
   `;
+  paneEl.querySelector('.title').textContent = title;
   panesEl.appendChild(paneEl);
 
   const term = new Terminal({

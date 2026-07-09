@@ -4,6 +4,9 @@ const os = require('os');
 const {
   normalizeFolderArg,
   sanitizeConfig,
+  sanitizeTerminalIdPayload,
+  sanitizeTerminalInputPayload,
+  sanitizeTerminalResizePayload,
   sanitizeTerminalSpawnOptions,
 } = require('../lib/ipc-guards');
 
@@ -54,6 +57,23 @@ test('sanitizeTerminalSpawnOptions rejects arbitrary shells and autorun commands
     ).ok,
     false
   );
+});
+
+test('sanitizeTerminalSpawnOptions rejects renderer-supplied shell paths', () => {
+  assert.equal(
+    sanitizeTerminalSpawnOptions(
+      { id: 'term-path', shell: 'C:\\Temp\\powershell.exe' },
+      defaults
+    ).ok,
+    false
+  );
+
+  const defaultShellResult = sanitizeTerminalSpawnOptions(
+    { id: 'term-default' },
+    { defaultShell: 'C:\\Windows\\System32\\cmd.exe', defaultCwd: os.tmpdir() }
+  );
+  assert.equal(defaultShellResult.ok, true);
+  assert.equal(defaultShellResult.value.shellPath, 'C:\\Windows\\System32\\cmd.exe');
 });
 
 test('sanitizeTerminalSpawnOptions rejects invalid ids and missing folders', () => {
@@ -119,4 +139,26 @@ test('sanitizeConfig defaults builder state when missing or malformed', () => {
     builder: { ideaText: 123, chips: 'not-an-array', plan: [1, 2, 3], scriptsTested: 'nope' },
   });
   assert.deepEqual(malformed.builder, { ideaText: '', chips: [], plan: null, scriptsTested: {} });
+});
+
+test('terminal control payload guards reject malformed renderer messages', () => {
+  assert.equal(sanitizeTerminalIdPayload(null).ok, false);
+  assert.equal(sanitizeTerminalIdPayload({ id: '../term' }).ok, false);
+  assert.deepEqual(sanitizeTerminalIdPayload({ id: 'term:1_ok' }), { ok: true, id: 'term:1_ok' });
+
+  assert.equal(sanitizeTerminalInputPayload({ id: 'term-1', data: Buffer.from('x') }).ok, false);
+  assert.deepEqual(sanitizeTerminalInputPayload({ id: 'term-1', data: 'help\r' }), {
+    ok: true,
+    id: 'term-1',
+    data: 'help\r',
+  });
+});
+
+test('terminal resize payload guard clamps dimensions', () => {
+  assert.deepEqual(sanitizeTerminalResizePayload({ id: 'term-1', cols: 1, rows: 999 }), {
+    ok: true,
+    id: 'term-1',
+    cols: 20,
+    rows: 200,
+  });
 });

@@ -10,6 +10,9 @@ const { findPlaceFile } = require('./lib/find-place-file');
 const {
   normalizeFolderArg,
   sanitizeConfig,
+  sanitizeTerminalIdPayload,
+  sanitizeTerminalInputPayload,
+  sanitizeTerminalResizePayload,
   sanitizeTerminalSpawnOptions,
 } = require('./lib/ipc-guards');
 const { autoUpdater } = require('electron-updater');
@@ -157,24 +160,30 @@ ipcMain.handle('pty:spawn', (event, opts) => {
   return { ok: true };
 });
 
-ipcMain.on('pty:input', (event, { id, data }) => {
-  const term = terminals.get(id);
-  if (term) term.write(data);
+ipcMain.on('pty:input', (event, payload) => {
+  const input = sanitizeTerminalInputPayload(payload);
+  if (!input.ok) return;
+  const term = terminals.get(input.id);
+  if (term) term.write(input.data);
 });
 
-ipcMain.on('pty:resize', (event, { id, cols, rows }) => {
-  const term = terminals.get(id);
-  if (term && cols > 0 && rows > 0) {
+ipcMain.on('pty:resize', (event, payload) => {
+  const resize = sanitizeTerminalResizePayload(payload);
+  if (!resize.ok) return;
+  const term = terminals.get(resize.id);
+  if (term) {
     try {
-      term.resize(cols, rows);
+      term.resize(resize.cols, resize.rows);
     } catch (e) {
       // ignore resize races
     }
   }
 });
 
-ipcMain.on('pty:kill', (event, { id }) => {
-  const term = terminals.get(id);
+ipcMain.on('pty:kill', (event, payload) => {
+  const terminal = sanitizeTerminalIdPayload(payload);
+  if (!terminal.ok) return;
+  const term = terminals.get(terminal.id);
   if (term) {
     try {
       term.kill();
@@ -186,7 +195,7 @@ ipcMain.on('pty:kill', (event, { id }) => {
 });
 
 ipcMain.handle('config:load', () => {
-  return loadConfig(configPath);
+  return sanitizeConfig(loadConfig(configPath));
 });
 
 ipcMain.handle('config:save', (event, config) => {

@@ -15,7 +15,9 @@
     "test": "node --test",
     "dist": "npm run icon && electron-builder --publish never",
     "dist:win": "npm run icon && electron-builder --win --publish never",
-    "pack:win": "npm run icon && electron-builder --win --dir --publish never"
+    "pack:win": "npm run icon && electron-builder --win --dir --publish never",
+    "shortcut": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-desktop-shortcut.ps1",
+    "shortcut:pack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-desktop-shortcut.ps1 -Build"
   },
   "build": {
     "appId": "com.crozo1x.baseplate",

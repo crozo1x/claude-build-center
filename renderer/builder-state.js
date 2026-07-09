@@ -1,11 +1,15 @@
 window.BuildCenter = window.BuildCenter || {};
 
 (function () {
-  const listeners = { planChanged: [] };
+  const listeners = { planChanged: [], stateLoaded: [] };
   let builderState = { ideaText: '', chips: [], plan: null, scriptsTested: {} };
 
   function emitPlanChanged() {
     listeners.planChanged.forEach((cb) => cb(builderState.plan));
+  }
+
+  function emitStateLoaded() {
+    listeners.stateLoaded.forEach((cb) => cb(builderState));
   }
 
   window.BuildCenter.getBuilderState = function () {
@@ -15,6 +19,7 @@ window.BuildCenter = window.BuildCenter || {};
   window.BuildCenter.setBuilderStateFromConfig = function (builder) {
     builderState = builder || { ideaText: '', chips: [], plan: null, scriptsTested: {} };
     emitPlanChanged();
+    emitStateLoaded();
   };
 
   window.BuildCenter.setBuilderIdeaText = function (ideaText) {
@@ -40,6 +45,10 @@ window.BuildCenter = window.BuildCenter || {};
 
   window.BuildCenter.onBuilderPlanChanged = function (cb) {
     listeners.planChanged.push(cb);
+  };
+
+  window.BuildCenter.onBuilderStateLoaded = function (cb) {
+    listeners.stateLoaded.push(cb);
   };
 
   window.BuildCenter.saveBuilderState = async function () {

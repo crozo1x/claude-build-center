@@ -3,11 +3,15 @@ function initIdeaView() {
   const chipButtons = document.querySelectorAll('.chip');
   const generateBtn = document.getElementById('btnGeneratePlan');
 
-  const state = window.BuildCenter.getBuilderState();
-  ideaTextEl.value = state.ideaText;
-  chipButtons.forEach((btn) => {
-    btn.classList.toggle('active', state.chips.includes(btn.dataset.chip));
-  });
+  function hydrateFromState(state) {
+    ideaTextEl.value = state.ideaText;
+    chipButtons.forEach((btn) => {
+      btn.classList.toggle('active', state.chips.includes(btn.dataset.chip));
+    });
+  }
+
+  hydrateFromState(window.BuildCenter.getBuilderState());
+  window.BuildCenter.onBuilderStateLoaded(hydrateFromState);
 
   let saveTimer = null;
   ideaTextEl.addEventListener('input', () => {

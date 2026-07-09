@@ -167,7 +167,7 @@ btnNewTerminal.addEventListener('click', () => {
 const btnNewScript = document.getElementById('btnNewScript');
 
 btnNewScript.addEventListener('click', () => {
-  createPane({ title: 'New Script', autoRun: 'claude' });
+  createPane({ title: 'Ask Claude', autoRun: 'claude' });
 });
 
 btnSyncStudio.addEventListener('click', () => {
@@ -183,8 +183,9 @@ btnPlayTest.addEventListener('click', async () => {
   }
 });
 
-// Start with one plain terminal open so the app isn't empty on launch.
-createPane({ title: 'Terminal' });
+// No pane opens automatically on launch: the Idea tab is the default view,
+// and the Advanced tab isn't visible yet, so a background pty process here
+// would spawn a real shell the user never asked for and can't see.
 
 window.api.update.onStatus((payload) => {
   if (payload.state === 'available') {

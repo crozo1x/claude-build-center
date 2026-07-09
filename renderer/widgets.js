@@ -9,7 +9,7 @@ function escapeHtml(str) {
 function renderActiveSessions(container) {
   function draw(sessions) {
     if (!sessions || sessions.length === 0) {
-      container.innerHTML = '<p class="widget-empty">No sessions open</p>';
+      container.innerHTML = '<p class="widget-empty">No sessions open. Use "Ask Claude" or "+ Terminal" above to start one.</p>';
       return;
     }
     container.innerHTML =
@@ -33,7 +33,7 @@ function renderGitStatus(container) {
   async function draw() {
     const folder = window.BuildCenter.getProjectFolder();
     if (!folder) {
-      container.innerHTML = '<p class="widget-empty">Not configured — set a project folder</p>';
+      container.innerHTML = '<p class="widget-empty">Set a project folder above to enable this.</p>';
       return;
     }
     const status = await window.api.git.status(folder);
@@ -59,7 +59,7 @@ function renderRojoStatus(container) {
   function draw() {
     const folder = window.BuildCenter.getProjectFolder();
     if (!folder) {
-      container.innerHTML = '<p class="widget-empty">Not configured — set a project folder</p>';
+      container.innerHTML = '<p class="widget-empty">Set a project folder above to enable this.</p>';
       return;
     }
     const status = window.BuildCenter.computeRojoStatus(window.BuildCenter.getSessions());

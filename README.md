@@ -21,7 +21,7 @@ See `docs/superpowers/specs/` for design docs and `docs/superpowers/plans/` for 
 3. **Visual Studio Build Tools** with the "Desktop development with C++" workload — same reason. Download: https://visualstudio.microsoft.com/visual-cpp-build-tools/
    - If you already have Visual Studio installed with the C++ workload, you're covered.
 4. **Claude Code CLI** installed and authenticated (`claude` should work from a plain terminal already) — this app just launches it inside a pane, it doesn't install or auth it.
-5. **Rojo** (optional) — needed for "Sync to Studio" to do anything real. Without it, that button opens a pane that shows a clear shell error rather than failing silently.
+5. **Rojo** (optional) — needed for "Sync to Studio" to do anything real. Without it, clicking that button shows an inline toolbar notice with an install link instead of opening a doomed pane.
 
 The native-compile step for `node-pty` is the one place `npm install` can go sideways on a fresh machine. If step 3 is missing, it'll fail with a `gyp` or `MSBuild` error — install the Build Tools and re-run.
 
@@ -73,7 +73,7 @@ which forces an Electron-ABI-matched rebuild of the native module.
 npm test
 ```
 
-Runs the unit test suite (Node's built-in `node --test`) covering the pure logic modules — config persistence and IPC input validation, git status parsing, place-file lookup, Rojo sync status inference, the Roblox builder's plan generator, and its debug error matcher. Electron UI/IPC isn't covered by automated tests (not meaningfully unit-testable); those are verified manually by running the app.
+Runs the unit test suite (Node's built-in `node --test`) covering the pure logic modules — config persistence and IPC input validation, git status parsing, place-file lookup, Rojo install detection/output classification/health polling, the Roblox builder's plan generator, and its debug error matcher. Electron UI/IPC isn't covered by automated tests (not meaningfully unit-testable); those are verified manually by running the app.
 
 ## Project layout
 
@@ -91,6 +91,7 @@ baseplate/
     ipc-guards.js            Validates/sanitizes terminal spawn options and persisted config before use
     plan-generator.js        Deterministic Roblox build-plan generation from an idea + chip selection
     debug-matcher.js         Pattern-matches Roblox Studio Output errors to practical fixes
+    rojo.js                  Rojo install detection, `rojo serve` output classification, and HTTP health polling
   renderer/
     index.html               Tab shell (Idea/Plan/Scripts/Debug/Advanced) + Advanced's terminal/widget containers
     renderer.js               Pane creation, xterm wiring, resize handling, session state publishing
@@ -104,9 +105,7 @@ baseplate/
     scripts-view.js           Scripts tab: script cards with copy-to-clipboard and tested-state
     debug-view.js             Debug tab: paste a Studio error, get a structured diagnosis
     style.css                 Dark "Modern SaaS Dashboard" theme
-    lib/
-      rojo-status.js          Dual Node/browser module: infers Rojo sync state from session list
-  test/                       Unit tests (node --test) mirroring the lib/ and renderer/lib/ modules
+  test/                       Unit tests (node --test) mirroring the lib/ modules
   docs/superpowers/
     specs/                    Design specs written before implementation
     plans/                    Step-by-step implementation plans
@@ -115,7 +114,7 @@ baseplate/
 ## How it works
 
 - `main.js` owns real `node-pty` processes (keyed by a per-pane id) and every other IPC handler: config load/save, the project folder dialog, git status (`child_process.execFile`), and Play/Test (`shell.openPath`).
-- `preload.js` exposes `window.api.{spawn,input,resize,kill,onData,onExit,config,project,git,roblox,update,logic}` to the renderer over a locked-down contextBridge (no `nodeIntegration`, no raw `require` in the page). `logic` wires the Roblox builder's pure `generatePlan`/`matchError` functions across the isolation boundary — no privileged operation, no IPC round-trip.
+- `preload.js` exposes `window.api.{spawn,input,resize,kill,onData,onExit,config,project,git,roblox,rojo,update,logic}` to the renderer over a locked-down contextBridge (no `nodeIntegration`, no raw `require` in the page). `logic` wires the Roblox builder's pure `generatePlan`/`matchError` functions across the isolation boundary — no privileged operation, no IPC round-trip. `rojo` exposes install detection, per-folder sync status, and a `rojo:status` push subscription backed by `main.js`'s per-pane state machine.
 - `renderer/state.js` is the single shared source of truth in the renderer for the current project folder and the list of open terminal sessions, so `renderer.js` (which owns the panes) and `widgets.js` (which owns the dashboard) can stay decoupled.
 - `renderer/widgets.js` uses GridStack.js (loaded via a plain `<script>` tag — no bundler) for the freeform drag/resize canvas, and persists layout + project folder together via `window.api.config`.
 - Widget render functions that subscribe to live state (Active Sessions, Git Status, Rojo Sync Status) return a `dispose()` function, called when the widget is removed, to clear timers/unsubscribe listeners and avoid leaks.
@@ -149,6 +148,7 @@ BasePlate runs local developer tools, so renderer-to-main IPC must stay intentio
 
 - **2026-07-09** — Roblox Vibe Coding Coach MVP: added a guided Idea/Plan/Scripts/Debug builder workflow as the app's default experience, with the terminal/Claude Code control center preserved under a new Advanced tab. Deterministic plan generation and error-pattern matching (no AI/network calls); persisted across restarts.
 - **2026-07-08** - Windows App Packaging: added BasePlate app icon assets, installer shortcut config, and build scripts for a double-clickable Windows installer or unpacked EXE.
+- **2026-07-07** — Rojo Integration: replaced the fake Rojo sync status with real detection — install check, `rojo serve` output parsing, and HTTP health polling — plus install guidance and a staleness warning on Play/Test.
 - **2026-07-07** — Auto-Update System: packaged the app as a Windows installer (unsigned, via electron-builder), added a GitHub Actions release pipeline, and a toolbar "Update Available" button that downloads and restarts the app on click.
 - **2026-07-06** — GUI Modernization: visual polish pass — toolbar/pane/widget shadows, greyed-out disabled buttons, and fixed a z-index conflict so maximized panes correctly stack above the widget canvas.
 - **2026-07-06** — GUI Modernization: project folder selection now survives restarts, saved alongside the widget layout.

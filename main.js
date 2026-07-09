@@ -7,6 +7,7 @@ const { execFile } = require('child_process');
 const { loadConfig, saveConfig } = require('./lib/config-store');
 const { parseGitStatus } = require('./lib/git-status');
 const { findPlaceFile } = require('./lib/find-place-file');
+const { checkRojoInstalled, classifyRojoLine, checkRojoHealth } = require('./lib/rojo');
 const {
   normalizeFolderArg,
   sanitizeConfig,
@@ -24,8 +25,52 @@ const {
 } = require('./lib/security-policy');
 
 const terminals = new Map(); // id -> pty process
+const paneMeta = new Map(); // id -> { kind, cwd }
+const rojoStatus = new Map(); // id -> { state, detail, port, folder }
+const rojoHealthTimers = new Map(); // id -> interval handle
+const paneLineBuffers = new Map(); // id -> trailing partial line
 let mainWindow;
 const configPath = path.join(app.getPath('userData'), 'config.json');
+
+function setRojoStatus(id, patch) {
+  const meta = paneMeta.get(id);
+  const folder = meta ? meta.cwd : null;
+  const next = Object.assign(
+    { state: 'not-started', detail: null, port: null },
+    rojoStatus.get(id),
+    patch,
+    { folder }
+  );
+  rojoStatus.set(id, next);
+  if (mainWindow && isAuthoritativePane(id, folder)) {
+    mainWindow.webContents.send('rojo:status', Object.assign({ paneId: id }, next));
+  }
+}
+
+function clearRojoHealthTimer(id) {
+  const timer = rojoHealthTimers.get(id);
+  if (timer) {
+    clearInterval(timer);
+    rojoHealthTimers.delete(id);
+  }
+}
+
+function isAuthoritativePane(id, folder) {
+  let matchId = null;
+  for (const [pid, meta] of paneMeta.entries()) {
+    if (meta.kind === 'sync-to-studio' && meta.cwd === folder) {
+      matchId = pid;
+    }
+  }
+  return matchId === id;
+}
+
+function hasLivePaneForFolder(folder) {
+  for (const meta of paneMeta.values()) {
+    if (meta.kind === 'sync-to-studio' && meta.cwd === folder) return true;
+  }
+  return false;
+}
 
 autoUpdater.autoDownload = false;
 
@@ -106,6 +151,8 @@ app.on('window-all-closed', () => {
     }
   }
   terminals.clear();
+  for (const timer of rojoHealthTimers.values()) clearInterval(timer);
+  rojoHealthTimers.clear();
   if (process.platform !== 'darwin') app.quit();
 });
 
@@ -122,7 +169,7 @@ ipcMain.handle('pty:spawn', (event, opts) => {
     return { ok: false, error: options.error };
   }
 
-  const { id, shellPath, cwd, cols, rows, autoRun } = options.value;
+  const { id, shellPath, cwd, cols, rows, autoRun, kind } = options.value;
   if (terminals.has(id)) {
     return { ok: false, error: 'Terminal id is already in use' };
   }
@@ -141,14 +188,59 @@ ipcMain.handle('pty:spawn', (event, opts) => {
   }
 
   terminals.set(id, term);
+  paneMeta.set(id, { kind, cwd: cwd || null });
+  if (kind === 'sync-to-studio') {
+    setRojoStatus(id, { state: 'starting' });
+  }
 
   term.onData((data) => {
     if (mainWindow) mainWindow.webContents.send('pty:data', { id, data });
+
+    const meta = paneMeta.get(id);
+    if (meta && meta.kind === 'sync-to-studio') {
+      const combined = (paneLineBuffers.get(id) || '') + data;
+      const lines = combined.split(/\r?\n/);
+      paneLineBuffers.set(id, lines.pop()); // last element has no trailing newline yet; keep it for next chunk
+      lines.forEach((line) => {
+        const parsed = classifyRojoLine(line);
+        if (!parsed) return;
+
+        if (parsed.type === 'listening') {
+          clearRojoHealthTimer(id);
+          setRojoStatus(id, { state: 'serving', detail: null, port: parsed.port });
+          const timer = setInterval(async () => {
+            const health = await checkRojoHealth(parsed.port);
+            if (!paneMeta.has(id)) return;
+            if (health.healthy) {
+              setRojoStatus(id, { state: 'serving', detail: null, port: parsed.port });
+            } else {
+              setRojoStatus(id, { state: 'error', detail: 'server stopped responding', port: parsed.port });
+            }
+          }, 3000);
+          rojoHealthTimers.set(id, timer);
+        } else if (parsed.type === 'error') {
+          clearRojoHealthTimer(id);
+          setRojoStatus(id, { state: 'error', detail: parsed.reason, port: null });
+        }
+      });
+    }
   });
 
   term.onExit(({ exitCode }) => {
     if (mainWindow) mainWindow.webContents.send('pty:exit', { id, code: exitCode });
     terminals.delete(id);
+    const meta = paneMeta.get(id);
+    if (meta && meta.kind === 'sync-to-studio') {
+      clearRojoHealthTimer(id);
+      paneMeta.delete(id);
+      rojoStatus.delete(id);
+      paneLineBuffers.delete(id);
+      if (mainWindow && !hasLivePaneForFolder(meta.cwd)) {
+        mainWindow.webContents.send('rojo:status', { paneId: id, state: 'not-started', detail: null, port: null, folder: meta.cwd });
+      }
+    } else {
+      paneMeta.delete(id);
+    }
   });
 
   if (autoRun) {
@@ -190,7 +282,7 @@ ipcMain.on('pty:kill', (event, payload) => {
     } catch (e) {
       // ignore
     }
-    terminals.delete(id);
+    terminals.delete(terminal.id);
   }
 });
 
@@ -246,6 +338,24 @@ ipcMain.handle('roblox:playTest', (event, folder) => {
   }
   shell.openPath(path.join(folderResult.folder, placeFile));
   return { ok: true };
+});
+
+ipcMain.handle('rojo:checkInstalled', () => checkRojoInstalled());
+
+ipcMain.handle('rojo:getStatus', (event, folder) => {
+  let matchId = null;
+  for (const [id, meta] of paneMeta.entries()) {
+    if (meta.kind === 'sync-to-studio' && meta.cwd === folder) {
+      matchId = id;
+    }
+  }
+  if (!matchId) {
+    return { state: 'not-started', detail: null, port: null, folder };
+  }
+  return Object.assign(
+    { paneId: matchId },
+    rojoStatus.get(matchId) || { state: 'not-started', detail: null, port: null, folder }
+  );
 });
 
 ipcMain.handle('update:check', () => {

@@ -56,23 +56,51 @@ function renderGitStatus(container) {
 }
 
 function renderRojoStatus(container) {
-  function draw() {
+  // Note: 'not-installed' is not a state this widget shows — install
+  // detection (Task 6) only runs when "Sync to Studio" is clicked and
+  // drives the toolbar notice, not this per-pane status map. Before that
+  // click, an uninstalled Rojo looks identical to 'not-started' here.
+  const STATE_LABELS = {
+    'not-started': 'Not syncing',
+    starting: 'Starting…',
+    serving: 'Serving',
+    error: 'Error',
+  };
+
+  function draw(status) {
     const folder = window.BuildCenter.getProjectFolder();
     if (!folder) {
       container.innerHTML = '<p class="widget-empty">Set a project folder above to enable this.</p>';
       return;
     }
-    const status = window.BuildCenter.computeRojoStatus(window.BuildCenter.getSessions());
-    container.innerHTML = `<p class="rojo-state ${status.connected ? 'connected' : 'disconnected'}">${
-      status.connected ? 'Synced' : 'Not syncing'
-    }</p>`;
+    const state = (status && status.state) || 'not-started';
+    const label = STATE_LABELS[state] || state;
+    const detail = status && status.detail ? ` (${escapeHtml(status.detail)})` : '';
+    container.innerHTML = `<p class="rojo-state ${state}">${escapeHtml(label)}${detail}</p>`;
   }
-  draw();
-  window.BuildCenter.onSessionsChanged(draw);
-  window.BuildCenter.onProjectFolderChanged(draw);
+
+  function refresh() {
+    const folder = window.BuildCenter.getProjectFolder();
+    if (!folder) {
+      draw(null);
+      return;
+    }
+    window.api.rojo.getStatus(folder).then((status) => {
+      if (window.BuildCenter.getProjectFolder() === folder) draw(status);
+    });
+  }
+
+  function onStatus(payload) {
+    if (payload.folder === window.BuildCenter.getProjectFolder()) draw(payload);
+  }
+
+  refresh();
+  const unsubscribeStatus = window.api.rojo.onStatus(onStatus);
+  window.BuildCenter.onProjectFolderChanged(refresh);
+
   return () => {
-    window.BuildCenter.offSessionsChanged(draw);
-    window.BuildCenter.offProjectFolderChanged(draw);
+    unsubscribeStatus();
+    window.BuildCenter.offProjectFolderChanged(refresh);
   };
 }
 

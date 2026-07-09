@@ -5,6 +5,33 @@ const btnProjectFolder = document.getElementById('btnProjectFolder');
 const projectFolderLabel = document.getElementById('projectFolderLabel');
 const btnSyncStudio = document.getElementById('btnSyncStudio');
 const btnPlayTest = document.getElementById('btnPlayTest');
+const toolbarNotice = document.getElementById('toolbarNotice');
+let toolbarNoticeTimer = null;
+let toolbarNoticePersistent = false;
+
+// Helper to show a dismissible notice in the toolbar.
+// If html ever contains dynamic/user-supplied content, it MUST be pre-escaped
+// with escapeHtml() (see renderer/widgets.js) before being passed in here.
+function showToolbarNotice(html, durationMs) {
+  if (toolbarNoticePersistent && !toolbarNotice.classList.contains('hidden') && durationMs) {
+    return; // don't let a transient notice silently clobber an unread persistent one
+  }
+  toolbarNotice.innerHTML = html;
+  toolbarNotice.classList.remove('hidden');
+  toolbarNoticePersistent = !durationMs;
+  if (toolbarNoticeTimer) clearTimeout(toolbarNoticeTimer);
+  if (durationMs) {
+    toolbarNoticeTimer = setTimeout(() => {
+      toolbarNotice.classList.add('hidden');
+    }, durationMs);
+  }
+}
+
+toolbarNotice.addEventListener('click', () => {
+  toolbarNotice.classList.add('hidden');
+  toolbarNoticePersistent = false;
+});
+
 const btnUpdateAvailable = document.getElementById('btnUpdateAvailable');
 
 function updateProjectFolderUI(folder) {
@@ -94,6 +121,7 @@ function createPane({ title, autoRun, kind, cwd }) {
     rows: term.rows,
     autoRun,
     cwd,
+    kind: kind || 'terminal',
   }).then((res) => {
     if (res && res.ok === false) {
       term.write(`\r\n[failed to start shell: ${res.error}]\r\n`);
@@ -170,16 +198,29 @@ btnNewScript.addEventListener('click', () => {
   createPane({ title: 'Ask Claude', autoRun: 'claude' });
 });
 
-btnSyncStudio.addEventListener('click', () => {
+btnSyncStudio.addEventListener('click', async () => {
+  const installed = await window.api.rojo.checkInstalled();
+  if (!installed.installed) {
+    showToolbarNotice(
+      'Rojo not found — see the <a href="https://rojo.space/docs/installation/" target="_blank">install guide</a>',
+      null
+    );
+    return;
+  }
   const folder = window.BuildCenter.getProjectFolder();
   createPane({ title: 'Sync to Studio', kind: 'sync-to-studio', autoRun: 'rojo serve', cwd: folder });
 });
 
 btnPlayTest.addEventListener('click', async () => {
   const folder = window.BuildCenter.getProjectFolder();
+  const status = await window.api.rojo.getStatus(folder);
   const result = await window.api.roblox.playTest(folder);
   if (!result.ok) {
     alert('Play/Test failed: ' + result.error);
+    return;
+  }
+  if (status.state !== 'serving') {
+    showToolbarNotice("Rojo isn't syncing — this may open a stale place.", 4000);
   }
 });
 

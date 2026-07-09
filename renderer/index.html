@@ -17,7 +17,28 @@
   </div>
 
   <div id="tabPanels">
-    <div id="tabIdea" class="tab-panel active"></div>
+    <div id="tabIdea" class="tab-panel active">
+      <div class="builder-panel">
+        <h2>Describe your game idea</h2>
+        <textarea id="ideaText" placeholder="e.g. a pet-collecting game where players hatch eggs and battle for currency"></textarea>
+        <h3>Pick what fits (choose any number)</h3>
+        <div class="chip-group" id="genreChips">
+          <button class="chip" data-chip="simulator">Simulator</button>
+          <button class="chip" data-chip="obby">Obby</button>
+          <button class="chip" data-chip="tycoon">Tycoon</button>
+          <button class="chip" data-chip="petGame">Pet Game</button>
+          <button class="chip" data-chip="fightingArena">Fighting Arena</button>
+          <button class="chip" data-chip="roundBased">Round-Based Minigame</button>
+        </div>
+        <div class="chip-group" id="featureChips">
+          <button class="chip" data-chip="leaderstats">Leaderstats</button>
+          <button class="chip" data-chip="shop">Shop</button>
+          <button class="chip" data-chip="dataSaving">Data Saving</button>
+          <button class="chip" data-chip="uiPolish">UI Polish</button>
+        </div>
+        <button id="btnGeneratePlan" class="primary-action">Generate Plan</button>
+      </div>
+    </div>
     <div id="tabPlan" class="tab-panel"></div>
     <div id="tabScripts" class="tab-panel"></div>
     <div id="tabDebug" class="tab-panel"></div>
@@ -53,6 +74,7 @@
   <script src="widgets.js"></script>
   <script src="scripts-data.js"></script>
   <script src="tabs.js"></script>
+  <script src="idea-view.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

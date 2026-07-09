@@ -5,6 +5,7 @@ function renderScriptCards() {
 
   container.innerHTML = window.BuildCenter.SCRIPT_TEMPLATES.map((script, index) => {
     const tested = Boolean(state.scriptsTested[script.filename]);
+    const testingChecklist = Array.isArray(script.testingChecklist) ? script.testingChecklist : [];
     return `
       <div class="script-card" data-index="${index}">
         <div class="script-card-header">
@@ -15,12 +16,20 @@ function renderScriptCards() {
           </label>
         </div>
         <div class="script-path">${escapeHtml(script.path)}</div>
+        <div class="script-path">${escapeHtml(script.type)}</div>
         <p class="script-purpose">${escapeHtml(script.purpose)}</p>
         <pre class="script-code">${escapeHtml(script.code)}</pre>
         <div class="script-actions">
           <button class="script-copy-code">Copy Code</button>
           <button class="script-copy-path">Copy Path</button>
         </div>
+        ${
+          testingChecklist.length > 0
+            ? `<p class="script-purpose">Testing checklist:</p><ul>${testingChecklist
+                .map((step) => `<li>${escapeHtml(step)}</li>`)
+                .join('')}</ul>`
+            : ''
+        }
       </div>
     `;
   }).join('');

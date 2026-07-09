@@ -45,6 +45,30 @@ test('sanitizeTerminalSpawnOptions accepts the Rojo sync autorun profile', () =>
   assert.equal(result.value.autoRun, 'rojo serve');
 });
 
+test('sanitizeTerminalSpawnOptions defaults and accepts known pane kinds', () => {
+  const defaulted = sanitizeTerminalSpawnOptions({ id: 'term-kind-1', shell: 'cmd.exe' }, defaults);
+  assert.equal(defaulted.ok, true);
+  assert.equal(defaulted.value.kind, 'terminal');
+
+  const syncKind = sanitizeTerminalSpawnOptions(
+    { id: 'term-kind-2', shell: 'cmd.exe', kind: 'sync-to-studio' },
+    defaults
+  );
+  assert.equal(syncKind.ok, true);
+  assert.equal(syncKind.value.kind, 'sync-to-studio');
+});
+
+test('sanitizeTerminalSpawnOptions rejects unrecognized pane kinds', () => {
+  assert.equal(
+    sanitizeTerminalSpawnOptions({ id: 'term-kind-3', shell: 'cmd.exe', kind: 'evil' }, defaults).ok,
+    false
+  );
+  assert.equal(
+    sanitizeTerminalSpawnOptions({ id: 'term-kind-4', shell: 'cmd.exe', kind: 42 }, defaults).ok,
+    false
+  );
+});
+
 test('sanitizeTerminalSpawnOptions rejects arbitrary shells and autorun commands', () => {
   assert.equal(
     sanitizeTerminalSpawnOptions({ id: 'term-2', shell: 'bash.exe' }, defaults).ok,

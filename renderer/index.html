@@ -2,37 +2,104 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Build Center</title>
+  <title>BasePlate</title>
   <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css" />
   <link rel="stylesheet" href="../node_modules/gridstack/dist/gridstack.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="toolbar">
-    <div id="brand">BUILD CENTER</div>
-    <button id="btnProjectFolder" title="Set the Roblox project folder">Set Project Folder</button>
-    <span id="projectFolderLabel">No project set</span>
-    <select id="shellSelect" title="Shell for new terminals">
-      <option value="powershell.exe">PowerShell</option>
-      <option value="cmd.exe">cmd</option>
-    </select>
-    <button id="btnNewTerminal">+ Terminal</button>
-    <button id="btnNewScript">New Script</button>
-    <button id="btnSyncStudio" disabled title="Set a project folder first">Sync to Studio</button>
-    <button id="btnPlayTest" disabled title="Set a project folder first">Play / Test</button>
-    <span id="toolbarNotice" class="toolbar-notice hidden" role="alert" aria-live="assertive"></span>
-    <button id="btnAddWidget">+ Widget</button>
+  <div id="tabBar">
+    <button class="tab-btn active" data-tab="idea">Idea</button>
+    <button class="tab-btn" data-tab="plan">Plan</button>
+    <button class="tab-btn" data-tab="scripts">Scripts</button>
+    <button class="tab-btn" data-tab="debug">Debug</button>
+    <button class="tab-btn" data-tab="advanced">Advanced</button>
   </div>
-  <div id="workspace">
-    <div id="panes"></div>
-    <div id="widgetCanvas" class="grid-stack"></div>
+
+  <div id="tabPanels">
+    <div id="tabIdea" class="tab-panel active">
+      <div class="builder-panel">
+        <h2>Describe your game idea</h2>
+        <textarea id="ideaText" placeholder="e.g. a pet-collecting game where players hatch eggs and battle for currency"></textarea>
+        <h3>Pick what fits (choose any number)</h3>
+        <div class="chip-group" id="genreChips">
+          <button class="chip" data-chip="simulator">Simulator</button>
+          <button class="chip" data-chip="obby">Obby</button>
+          <button class="chip" data-chip="tycoon">Tycoon</button>
+          <button class="chip" data-chip="petGame">Pet Game</button>
+          <button class="chip" data-chip="fightingArena">Fighting Arena</button>
+          <button class="chip" data-chip="roundBased">Round-Based Minigame</button>
+        </div>
+        <div class="chip-group" id="featureChips">
+          <button class="chip" data-chip="leaderstats">Leaderstats</button>
+          <button class="chip" data-chip="shop">Shop</button>
+          <button class="chip" data-chip="dataSaving">Data Saving</button>
+          <button class="chip" data-chip="uiPolish">UI Polish</button>
+        </div>
+        <button id="btnGeneratePlan" class="primary-action">Generate Plan</button>
+      </div>
+    </div>
+    <div id="tabPlan" class="tab-panel">
+      <div class="builder-panel" id="planContent">
+        <p class="widget-empty">No plan yet — describe your idea and click "Generate Plan" on the Idea tab.</p>
+      </div>
+    </div>
+    <div id="tabScripts" class="tab-panel">
+      <div class="builder-panel" id="scriptsContent"></div>
+    </div>
+    <div id="tabDebug" class="tab-panel">
+      <div class="builder-panel">
+        <h2>Paste your Roblox Studio Output error</h2>
+        <textarea id="debugInput" placeholder="Paste the red error text from Studio's Output window here"></textarea>
+        <button id="btnDiagnose" class="primary-action">Diagnose</button>
+        <div id="debugResult"></div>
+        <div class="debug-warning">
+          <strong>Roblox-specific reminders:</strong>
+          <ul>
+            <li>Never trust data a client sends via a RemoteEvent — validate everything server-side (price, item ID, amount).</li>
+            <li>DataStore writes can fail or throttle — always wrap them in <code>pcall</code> and don't rely on a single save attempt.</li>
+            <li>Always test with 2+ simulated players before assuming something works — many bugs only appear with multiple clients.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div id="tabAdvanced" class="tab-panel">
+      <div id="toolbar">
+        <div id="brand">BASEPLATE</div>
+        <button id="btnProjectFolder" title="Set the Roblox project folder">Set Project Folder</button>
+        <span id="projectFolderLabel">No project set</span>
+        <select id="shellSelect" title="Shell for new terminals">
+          <option value="powershell.exe">PowerShell</option>
+          <option value="cmd.exe">cmd</option>
+        </select>
+        <button id="btnNewTerminal">+ Terminal</button>
+        <button id="btnNewScript" title="Open a Claude Code session in your project folder">Ask Claude</button>
+        <button id="btnSyncStudio" disabled title="Set a project folder first">Sync to Studio</button>
+        <button id="btnPlayTest" disabled title="Set a project folder first">Play / Test</button>
+        <span id="toolbarNotice" class="toolbar-notice hidden" role="alert" aria-live="assertive"></span>
+        <button id="btnAddWidget">+ Widget</button>
+        <button id="btnUpdateAvailable" class="hidden">Update Available</button>
+      </div>
+      <div id="workspace">
+        <div id="panes"></div>
+        <div id="widgetCanvas" class="grid-stack"></div>
+      </div>
+      <div id="widgetPicker" class="widget-picker hidden"></div>
+    </div>
   </div>
-  <div id="widgetPicker" class="widget-picker hidden"></div>
+
   <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
   <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
   <script src="../node_modules/gridstack/dist/gridstack-all.js"></script>
   <script src="state.js"></script>
   <script src="widgets.js"></script>
+  <script src="scripts-data.js"></script>
+  <script src="builder-state.js"></script>
+  <script src="tabs.js"></script>
+  <script src="idea-view.js"></script>
+  <script src="plan-view.js"></script>
+  <script src="scripts-view.js"></script>
+  <script src="debug-view.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

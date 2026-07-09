@@ -32,6 +32,8 @@ toolbarNotice.addEventListener('click', () => {
   toolbarNoticePersistent = false;
 });
 
+const btnUpdateAvailable = document.getElementById('btnUpdateAvailable');
+
 function updateProjectFolderUI(folder) {
   projectFolderLabel.textContent = folder || 'No project set';
   btnSyncStudio.disabled = !folder;
@@ -80,7 +82,7 @@ function createPane({ title, autoRun, kind, cwd }) {
   paneEl.className = 'pane';
   paneEl.innerHTML = `
     <div class="pane-header">
-      <span class="title">${title}</span>
+      <span class="title"></span>
       <span class="status"></span>
       <div class="pane-actions">
         <button class="btn-max" title="Maximize / restore">⤢</button>
@@ -89,6 +91,7 @@ function createPane({ title, autoRun, kind, cwd }) {
     </div>
     <div class="pane-body"></div>
   `;
+  paneEl.querySelector('.title').textContent = title;
   panesEl.appendChild(paneEl);
 
   const term = new Terminal({
@@ -174,6 +177,17 @@ function publishSessions() {
   );
 }
 
+window.BuildCenter.refitAllSessions = function () {
+  sessions.forEach((s, id) => {
+    try {
+      s.fitAddon.fit();
+      window.api.resize(id, s.term.cols, s.term.rows);
+    } catch (e) {
+      // ignore transient resize races, matches existing ResizeObserver pattern
+    }
+  });
+};
+
 btnNewTerminal.addEventListener('click', () => {
   createPane({ title: 'Terminal' });
 });
@@ -181,7 +195,7 @@ btnNewTerminal.addEventListener('click', () => {
 const btnNewScript = document.getElementById('btnNewScript');
 
 btnNewScript.addEventListener('click', () => {
-  createPane({ title: 'New Script', autoRun: 'claude' });
+  createPane({ title: 'Ask Claude', autoRun: 'claude' });
 });
 
 btnSyncStudio.addEventListener('click', async () => {
@@ -210,5 +224,26 @@ btnPlayTest.addEventListener('click', async () => {
   }
 });
 
-// Start with one plain terminal open so the app isn't empty on launch.
-createPane({ title: 'Terminal' });
+// No pane opens automatically on launch: the Idea tab is the default view,
+// and the Advanced tab isn't visible yet, so a background pty process here
+// would spawn a real shell the user never asked for and can't see.
+
+window.api.update.onStatus((payload) => {
+  if (payload.state === 'available') {
+    btnUpdateAvailable.classList.remove('hidden');
+  }
+});
+
+btnUpdateAvailable.addEventListener('click', async () => {
+  btnUpdateAvailable.disabled = true;
+  btnUpdateAvailable.textContent = 'Updating…';
+  const result = await window.api.update.download();
+  if (!result.ok) {
+    alert('Update failed: ' + result.error);
+    btnUpdateAvailable.disabled = false;
+    btnUpdateAvailable.textContent = 'Update Available';
+  }
+  // On success, the app will quit and restart itself once the download
+  // finishes (see Task 4's 'downloaded' handling in main.js) — no further
+  // UI state is needed here.
+});

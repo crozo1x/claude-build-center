@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test on Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate app icon assets
+        run: npm run icon
+
+      - name: Syntax-check JavaScript files
+        shell: pwsh
+        run: |
+          $excluded = '\\(node_modules|dist|out|build|\.git)\\'
+          $files = Get-ChildItem -Recurse -Filter *.js | Where-Object { $_.FullName -notmatch $excluded }
+          foreach ($file in $files) {
+            Write-Host "Checking $($file.FullName)"
+            node --check $file.FullName
+          }
+
+      - name: Syntax-check PowerShell scripts
+        shell: pwsh
+        run: |
+          $excluded = '\\(node_modules|dist|out|build|\.git)\\'
+          $files = Get-ChildItem -Recurse -Filter *.ps1 | Where-Object { $_.FullName -notmatch $excluded }
+          foreach ($file in $files) {
+            Write-Host "Checking $($file.FullName)"
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              foreach ($errorItem in $errors) {
+                Write-Error "$($file.FullName): $($errorItem.Message)"
+              }
+              exit 1
+            }
+          }
+
+      - name: Run unit tests
+        run: npm test

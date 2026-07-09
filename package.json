@@ -1,22 +1,61 @@
 {
-  "name": "claude-build-center",
-  "version": "0.1.0",
-  "description": "Local control center for Claude Code terminals and local AI agents",
+  "name": "baseplate",
+  "version": "0.1.2",
+  "description": "BasePlate - Roblox Vibe Coding Coach: a guided Roblox game-building assistant with a terminal/Claude Code control center underneath",
+  "author": {
+    "name": "crozo1x",
+    "email": "selfbrandbusiness@gmail.com"
+  },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
     "rebuild": "electron-rebuild -f -w node-pty",
-    "test": "node --test"
+    "icon": "node scripts/generate-icon.js",
+    "test": "node --test",
+    "dist": "npm run icon && electron-builder --publish never",
+    "dist:win": "npm run icon && electron-builder --win --publish never",
+    "pack:win": "npm run icon && electron-builder --win --dir --publish never",
+    "shortcut": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-desktop-shortcut.ps1",
+    "shortcut:pack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-desktop-shortcut.ps1 -Build"
+  },
+  "build": {
+    "appId": "com.crozo1x.baseplate",
+    "productName": "BasePlate",
+    "npmRebuild": false,
+    "asarUnpack": [
+      "**/node_modules/node-pty/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "artifactName": "BasePlate-Setup-${version}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "crozo1x",
+      "repo": "baseplate"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BasePlate"
+    }
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
+    "electron-updater": "^6.8.9",
     "gridstack": "^12.6.0",
     "node-pty": "^1.0.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.1",
-    "electron": "^31.3.0"
+    "electron": "^31.3.0",
+    "electron-builder": "^26.15.3"
   }
 }

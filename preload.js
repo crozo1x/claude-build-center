@@ -29,4 +29,17 @@ contextBridge.exposeInMainWorld('api', {
       return () => ipcRenderer.removeListener('rojo:status', listener);
     },
   },
+  update: {
+    check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.invoke('update:download'),
+    onStatus: (cb) => {
+      const listener = (_event, payload) => cb(payload);
+      ipcRenderer.on('update:status', listener);
+      return () => ipcRenderer.removeListener('update:status', listener);
+    },
+  },
+  logic: {
+    generatePlan: (input) => require('./lib/plan-generator').generatePlan(input),
+    matchError: (text) => require('./lib/debug-matcher').matchError(text),
+  },
 });

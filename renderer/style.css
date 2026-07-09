@@ -592,3 +592,74 @@ html, body {
   margin: 8px 0 0;
   padding-left: 20px;
 }
+
+.project-doctor-summary {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.project-doctor-summary.ready {
+  color: #3fb950;
+}
+
+.project-doctor-summary.review {
+  color: #d29922;
+}
+
+.project-doctor-summary.needs-setup {
+  color: #f85149;
+}
+
+.project-doctor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.project-doctor-check {
+  border-top: 1px solid #21262d;
+  padding: 7px 0;
+}
+
+.project-doctor-check:first-child {
+  border-top: none;
+}
+
+.project-doctor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-doctor-title {
+  font-weight: 600;
+}
+
+.project-doctor-badge {
+  margin-left: auto;
+  color: #8b949e;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.project-doctor-check.ok .project-doctor-badge {
+  color: #3fb950;
+}
+
+.project-doctor-check.warning .project-doctor-badge {
+  color: #d29922;
+}
+
+.project-doctor-check.blocker .project-doctor-badge {
+  color: #f85149;
+}
+
+.project-doctor-check p {
+  margin: 4px 0 0;
+  color: #8b949e;
+  line-height: 1.35;
+}
+
+.project-doctor-action {
+  color: #c9d1d9 !important;
+}

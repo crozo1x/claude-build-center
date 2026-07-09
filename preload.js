@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   project: {
     selectFolder: () => ipcRenderer.invoke('project:selectFolder'),
+    diagnose: (folder) => ipcRenderer.invoke('project:diagnose', folder),
   },
   git: {
     status: (folder) => ipcRenderer.invoke('git:status', folder),

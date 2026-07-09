@@ -104,12 +104,77 @@ function renderRojoStatus(container) {
   };
 }
 
+
+function renderProjectDoctor(container) {
+  const STATUS_LABELS = {
+    ok: 'OK',
+    warning: 'Review',
+    blocker: 'Blocked',
+  };
+
+  function drawEmpty() {
+    container.innerHTML = '<p class="widget-empty">Set a project folder above to check Roblox project readiness.</p>';
+  }
+
+  function draw(result) {
+    if (!result || !Array.isArray(result.checks)) {
+      container.innerHTML = '<p class="widget-empty">Project check unavailable.</p>';
+      return;
+    }
+
+    const summaryLabel = result.summary === 'ready' ? 'Ready' : result.summary === 'review' ? 'Needs review' : 'Needs setup';
+    const checksHtml = result.checks
+      .map((check) => {
+        const status = STATUS_LABELS[check.status] || check.status;
+        const action = check.action ? `<p class="project-doctor-action">${escapeHtml(check.action)}</p>` : '';
+        return `
+          <li class="project-doctor-check ${escapeHtml(check.status)}">
+            <div class="project-doctor-row">
+              <span class="project-doctor-title">${escapeHtml(check.title)}</span>
+              <span class="project-doctor-badge">${escapeHtml(status)}</span>
+            </div>
+            <p>${escapeHtml(check.detail)}</p>
+            ${action}
+          </li>
+        `;
+      })
+      .join('');
+
+    container.innerHTML = `
+      <p class="project-doctor-summary ${escapeHtml(result.summary)}">${escapeHtml(summaryLabel)}</p>
+      <ul class="project-doctor-list">${checksHtml}</ul>
+    `;
+  }
+
+  async function refresh() {
+    const folder = window.BuildCenter.getProjectFolder();
+    if (!folder) {
+      drawEmpty();
+      return;
+    }
+    try {
+      const result = await window.api.project.diagnose(folder);
+      if (window.BuildCenter.getProjectFolder() === folder) draw(result);
+    } catch (err) {
+      container.innerHTML = '<p class="widget-empty">Project check failed.</p>';
+    }
+  }
+
+  refresh();
+  window.BuildCenter.onProjectFolderChanged(refresh);
+  const intervalId = setInterval(refresh, 10000);
+  return () => {
+    window.BuildCenter.offProjectFolderChanged(refresh);
+    clearInterval(intervalId);
+  };
+}
 function renderRobloxAnalytics(container) {
   container.innerHTML = '<p class="widget-empty">Coming soon — requires a Roblox Open Cloud API key.</p>';
 }
 
 const WIDGET_CATALOG = [
   { type: 'active-sessions', title: 'Active Sessions', render: renderActiveSessions },
+  { type: 'project-doctor', title: 'Project Doctor', render: renderProjectDoctor },
   { type: 'git-status', title: 'Git Status', render: renderGitStatus },
   { type: 'rojo-sync-status', title: 'Rojo Sync Status', render: renderRojoStatus },
   { type: 'roblox-analytics', title: 'Roblox Analytics', render: renderRobloxAnalytics },

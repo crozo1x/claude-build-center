@@ -7,6 +7,7 @@ const { execFile } = require('child_process');
 const { loadConfig, saveConfig } = require('./lib/config-store');
 const { parseGitStatus } = require('./lib/git-status');
 const { findPlaceFile } = require('./lib/find-place-file');
+const { diagnoseProjectFolder } = require('./lib/project-doctor');
 const { checkRojoInstalled, classifyRojoLine, checkRojoHealth } = require('./lib/rojo');
 const {
   normalizeFolderArg,
@@ -303,6 +304,25 @@ ipcMain.handle('project:selectFolder', async () => {
     return { canceled: true };
   }
   return { canceled: false, folder: result.filePaths[0] };
+});
+ipcMain.handle('project:diagnose', (event, folder) => {
+  const folderResult = normalizeFolderArg(folder);
+  if (!folderResult.ok) {
+    return {
+      ok: false,
+      summary: 'needs-setup',
+      checks: [
+        {
+          id: 'folder-access',
+          title: 'Project folder',
+          status: 'blocker',
+          detail: folderResult.error,
+          action: 'Choose an existing Roblox project folder.',
+        },
+      ],
+    };
+  }
+  return diagnoseProjectFolder(folderResult.folder);
 });
 
 ipcMain.handle('git:status', (event, folder) => {

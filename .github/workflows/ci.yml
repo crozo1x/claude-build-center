@@ -39,5 +39,23 @@ jobs:
             node --check $file.FullName
           }
 
+      - name: Syntax-check PowerShell scripts
+        shell: pwsh
+        run: |
+          $excluded = '\\(node_modules|dist|out|build|\.git)\\'
+          $files = Get-ChildItem -Recurse -Filter *.ps1 | Where-Object { $_.FullName -notmatch $excluded }
+          foreach ($file in $files) {
+            Write-Host "Checking $($file.FullName)"
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              foreach ($errorItem in $errors) {
+                Write-Error "$($file.FullName): $($errorItem.Message)"
+              }
+              exit 1
+            }
+          }
+
       - name: Run unit tests
         run: npm test

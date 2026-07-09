@@ -43,6 +43,12 @@ function renderScriptCards() {
 
 function initScriptsView() {
   renderScriptCards();
+  // Config (and thus scriptsTested) loads asynchronously and can resolve
+  // after this first synchronous render, same race idea-view.js handles for
+  // ideaText/chips — without this, persisted "Tested" checkboxes silently
+  // stay unchecked in the UI after an app restart even though the
+  // underlying builder state loaded correctly.
+  window.BuildCenter.onBuilderStateLoaded(renderScriptCards);
 }
 
 initScriptsView();

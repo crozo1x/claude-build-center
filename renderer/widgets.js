@@ -168,6 +168,15 @@ async function initWidgets() {
   }
   window.BuildCenter.setProjectFolder(config.projectFolder);
   window.BuildCenter.setBuilderStateFromConfig(config.builder);
+  // GridStack v12 defaults to `el.textContent = w.content` (an XSS-safety
+  // default) which breaks every widget here, since addWidgetToGrid's
+  // `content` is always a developer-authored HTML template (never raw user
+  // input) that must be parsed as real DOM so `.widget-body`/`.widget-close`
+  // can be found afterward. Opt back into HTML rendering for our own trusted
+  // templates.
+  GridStack.renderCB = (el, w) => {
+    el.innerHTML = w.content || '';
+  };
   grid = GridStack.init({ float: true, cellHeight: 80, column: 12 }, '#widgetCanvas');
   config.widgets.forEach((w) => addWidgetToGrid(w.type, w));
   grid.on('change', persistConfig);
@@ -178,7 +187,10 @@ async function initWidgets() {
 
 window.BuildCenter.refreshWidgetGrid = function () {
   if (grid) {
-    grid.onParentResize();
+    // GridStack v12 renamed onParentResize() to onResize(); the old name
+    // doesn't exist and was throwing on every Advanced tab activation,
+    // which silently defeated this whole re-fit hook.
+    grid.onResize();
   }
 };
 

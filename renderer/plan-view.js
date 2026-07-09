@@ -1,3 +1,18 @@
+function renderScriptsToCreate(scriptsToCreate, escapeHtml) {
+  const scripts = Array.isArray(scriptsToCreate) ? scriptsToCreate : [];
+  if (scripts.length === 0) {
+    return '<p class="widget-empty">No specific scripts recommended yet — pick a genre chip on the Idea tab for tailored recommendations.</p>';
+  }
+  return `<ul>${scripts
+    .map(
+      (s) =>
+        `<li><strong>${escapeHtml(s.name)}</strong> (${escapeHtml(s.type)}) — ${escapeHtml(
+          s.path
+        )}<br>${escapeHtml(s.purpose)}</li>`
+    )
+    .join('')}</ul>`;
+}
+
 function renderPlan(plan) {
   const container = document.getElementById('planContent');
   if (!plan) {
@@ -19,6 +34,9 @@ function renderPlan(plan) {
 
     <h3>Object / Folder Tree</h3>
     <pre class="plan-tree">${plan.folderTree.map((line) => escapeHtml(line)).join('\n')}</pre>
+
+    <h3>Scripts to Create</h3>
+    ${renderScriptsToCreate(plan.scriptsToCreate, escapeHtml)}
 
     <h3>Setup Checklist</h3>
     <ol>${plan.setupChecklist.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol>

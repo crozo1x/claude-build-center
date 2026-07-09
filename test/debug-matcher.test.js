@@ -68,7 +68,47 @@ test('matchError falls back to generic guidance for unrecognized text', () => {
   assert.match(result.problem, /doesn't match one of the common patterns/i);
   assert.match(result.likelyCause, /different wording|less common/i);
   assert.ok(result.fixSteps.some((step) => /line number and script name/i.test(step)));
-  assert.match(result.testNext, /New Script/);
+  assert.match(result.testNext, /Ask Claude/);
+});
+
+test('matchError recognizes "attempt to call a nil value"', () => {
+  const result = matchError("ServerScriptService.Combat:12: attempt to call a nil value (method 'Conect')");
+  assert.equal(result.matched, true);
+  assert.equal(result.pattern, 'call-nil');
+  assert.match(result.problem, /call something as a function/i);
+  assert.match(result.likelyCause, /typo/i);
+  assert.ok(result.fixSteps.some((step) => /spelling and capitalization/i.test(step)));
+  assert.match(result.testNext, /temporary print/i);
+});
+
+test('matchError distinguishes Humanoid-timing errors from generic not-valid-member errors', () => {
+  const humanoidResult = matchError('Humanoid is not a valid member of Model "Player1"');
+  assert.equal(humanoidResult.matched, true);
+  assert.equal(humanoidResult.pattern, 'humanoid-timing');
+  assert.match(humanoidResult.likelyCause, /asynchronously/i);
+  assert.ok(humanoidResult.fixSteps.some((step) => /CharacterAdded/.test(step)));
+  assert.match(humanoidResult.testNext, /respawning/i);
+
+  const genericResult = matchError('Workspace.Part is not a valid member of Model "Workspace"');
+  assert.equal(genericResult.pattern, 'not-valid-member');
+});
+
+test('matchError recognizes "Parent property is locked" errors', () => {
+  const result = matchError('The Parent property of Part is locked, current parent is NULL, new parent is Terrain');
+  assert.equal(result.matched, true);
+  assert.equal(result.pattern, 'parent-locked');
+  assert.match(result.problem, /Roblox doesn't allow/i);
+  assert.ok(result.fixSteps.some((step) => /Terrain/.test(step)));
+  assert.match(result.testNext, /Explorer/i);
+});
+
+test('matchError recognizes "Http requests are not enabled" errors', () => {
+  const result = matchError('Http requests are not enabled. Enable via game settings');
+  assert.equal(result.matched, true);
+  assert.equal(result.pattern, 'http-not-enabled');
+  assert.match(result.likelyCause, /disables outgoing HTTP requests/i);
+  assert.ok(result.fixSteps.some((step) => /Allow HTTP Requests/.test(step)));
+  assert.match(result.testNext, /returns data/i);
 });
 
 test('matchError falls back to generic guidance for empty input', () => {
@@ -76,5 +116,5 @@ test('matchError falls back to generic guidance for empty input', () => {
   assert.equal(result.matched, false);
   assert.match(result.problem, /doesn't match one of the common patterns/i);
   assert.ok(Array.isArray(result.fixSteps));
-  assert.match(result.testNext, /New Script/);
+  assert.match(result.testNext, /Ask Claude/);
 });
